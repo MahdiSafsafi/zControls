@@ -1,0 +1,6 @@
+1-Open zControls group project .
+2-Add Source directory to your delphi library path .
+3-Compile and build zControls Runtime package (zControls_R).
+4-Compile and build zControls Designtime package (zControls_D).
+5-Install zControls_D .
+6-Enjoy !
