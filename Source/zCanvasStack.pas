@@ -15,6 +15,12 @@
 //
 // **************************************************************************************************
 
+// **************************************************************************************************
+//
+// https://github.com/MahdiSafsafi/zcontrols
+//
+// **************************************************************************************************
+
 unit zCanvasStack;
 
 interface
@@ -216,7 +222,7 @@ begin
     raise EListError.CreateRes(@SUnbalancedOperation);
   if (Index > -1) and (Index < Count) then
   begin
-    Result := FItems[Index];
+    Result := Items[Index];
     Exit;
   end;
   raise EArgumentOutOfRangeException.CreateRes(@SArgumentOutOfRange);

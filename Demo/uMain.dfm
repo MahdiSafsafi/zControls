@@ -1,7 +1,7 @@
 object Main: TMain
   Left = 0
   Top = 0
-  Caption = 'Main'
+  Caption = 'zObjectInspector Demo'
   ClientHeight = 425
   ClientWidth = 773
   Color = clBtnFace
@@ -133,6 +133,13 @@ object Main: TMain
         Top = 120
         Width = 105
         Height = 105
+      end
+      object Label3: TLabel
+        Left = 24
+        Top = 240
+        Width = 31
+        Height = 13
+        Caption = 'Label3'
       end
       object LabeledEdit1: TLabeledEdit
         Left = 16

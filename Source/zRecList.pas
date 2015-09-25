@@ -15,6 +15,12 @@
 //
 // **************************************************************************************************
 
+// **************************************************************************************************
+//
+// https://github.com/MahdiSafsafi/zcontrols
+//
+// **************************************************************************************************
+
 unit zRecList;
 
 interface
@@ -27,7 +33,7 @@ uses
   TypInfo;
 
 type
-  TzRecordList<T, P> = class
+  TzRecordList<T, P> = class(TObject)
   private
     FCount: Integer;
     FList: TList;
@@ -48,6 +54,7 @@ type
   function First: P;
   function Last: P;
   procedure Clear; virtual;
+  procedure SortOrgList(Compare: TListSortCompare);
   function Delete(const Index: Integer): Boolean; virtual;
   function Add: P; overload; virtual;
   function Add(const Rec: T): Integer; overload; virtual;
@@ -180,6 +187,11 @@ var
   R: Pointer absolute PRec;
 begin
   Result := R;
+end;
+
+procedure TzRecordList<T, P>.SortOrgList(Compare: TListSortCompare);
+begin
+FList.Sort(Compare);
 end;
 
 procedure TzRecordList<T, P>.FreeRecord(PRec: Pointer);

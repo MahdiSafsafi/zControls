@@ -30,6 +30,7 @@ type
     SpeedButton2: TSpeedButton;
     Image1: TImage;
     BalloonHint1: TBalloonHint;
+    Label3: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure ObjsComboChange(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
