@@ -565,6 +565,10 @@ type
     procedure WMLButtonUp(var Message: TWMLButtonUp); message WM_LBUTTONUP;
     procedure WMLBUTTONDBLCLK(var Message: TWMLBUTTONDBLCLK);
       message WM_LBUTTONDBLCLK;
+    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
+      override;
+    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
+      override;
     function GetPlusMinBtnRect(Index: Integer): TRect;
     function GetItemRect(Index: Integer): TRect;
     function GetValueRect(Index: Integer): TRect;
@@ -2511,6 +2515,34 @@ begin
   DoSetValue(PItem, Value);
 end;
 
+function TzCustomObjInspector.DoMouseWheelDown(Shift: TShiftState;
+  MousePos: TPoint): Boolean;
+var
+  M : TWMVScroll;
+begin
+  if Assigned(FPropInspEdit.FList)
+    and IsWindowVisible(FPropInspEdit.FList.Handle) then
+    Exit(False);
+  M := Default(TWMVScroll);
+  M.ScrollCode :=  SB_LINEDOWN;
+  WMVScroll(M);
+  inherited DoMouseWheelDown(Shift, MousePos);
+end;
+
+function TzCustomObjInspector.DoMouseWheelUp(Shift: TShiftState;
+  MousePos: TPoint): Boolean;
+var
+  M : TWMVScroll;
+begin
+  if Assigned(FPropInspEdit.FList)
+    and IsWindowVisible(FPropInspEdit.FList.Handle) then
+    Exit(False);
+    M := Default(TWMVScroll);
+  M.ScrollCode :=  SB_LINEUP;
+  WMVScroll(M);
+  inherited DoMouseWheelUp(Shift, MousePos);
+end;
+
 function TzCustomObjInspector.DoSelectCaret(Index: Integer): Boolean;
 var
   X, Y, i, Offset: Integer;
@@ -4329,13 +4361,16 @@ var
 begin
 
   Value := PItem.Value;
-  case PItem.Prop.PropertyType.TypeKind of
-    tkMethod:
-      Exit(vtMethod);
-    tkString, tkWString, tkUString:
-      Exit(vtString);
-    tkWChar, tkChar:
-      Exit(vtChar);
+  if Assigned(PItem.Prop) then
+  begin
+    case PItem.Prop.PropertyType.TypeKind of
+      tkMethod:
+        Exit(vtMethod);
+      tkString, tkWString, tkUString:
+        Exit(vtString);
+      tkWChar, tkChar:
+        Exit(vtChar);
+    end;
   end;
   if Value.TypeInfo = TypeInfo(TColor) then
     Exit(vtColor)
