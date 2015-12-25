@@ -698,12 +698,14 @@ type
     property ShowGridLines;
     property GridColor;
     property SplitterColor;
+    property ReadOnlyColor; 
     property FixedSplitter;
     property ReadOnly;
     property TrackChange;
     property GutterWidth;
     property ShowItemHint;
     property SortByCategory;
+    property SplitterPos; 
     property HeaderPropText;
     property HeaderValueText;
     property OnClick;
