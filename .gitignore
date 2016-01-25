@@ -1,0 +1,6 @@
+/Demo/Win32/Debug/*.dcu
+/Demo/*.local
+/Demo/*.identcache
+/Source/__history
+/Demo/*.stat
+/Demo/Win32/Debug/*.exe
