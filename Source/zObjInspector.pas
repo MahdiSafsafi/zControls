@@ -1199,6 +1199,8 @@ end;
 
 function TPropItem.IsEnum: Boolean;
 begin
+  if not Assigned(Prop) then
+    Exit(False);
   if IsCategory then
     Exit(False);
   Result := Prop.PropertyType.TypeKind = tkEnumeration;
