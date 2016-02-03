@@ -379,7 +379,7 @@ type
     procedure ComponentChanged; virtual;
     procedure Changed; virtual;
   public
-    procedure Invalidate;
+    procedure Invalidate; override;
     procedure BeginUpdate;
     procedure EndUpdate;
     function IsItemCircularLink(PItem: PPropItem): Boolean;
@@ -565,10 +565,6 @@ type
     procedure WMLButtonUp(var Message: TWMLButtonUp); message WM_LBUTTONUP;
     procedure WMLBUTTONDBLCLK(var Message: TWMLBUTTONDBLCLK);
       message WM_LBUTTONDBLCLK;
-    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
-      override;
-    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
-      override;
     function GetPlusMinBtnRect(Index: Integer): TRect;
     function GetItemRect(Index: Integer): TRect;
     function GetValueRect(Index: Integer): TRect;
@@ -593,6 +589,10 @@ type
     procedure SetAllowSearch(const Value: Boolean);
     procedure SetReadOnlyColor(const Value: TColor);
   protected
+    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
+      override;
+    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
+      override;
     procedure CreateWnd; override;
     procedure Paint; override;
     function DoSelectCaret(Index: Integer): Boolean;
@@ -1314,6 +1314,7 @@ procedure TzObjInspectorBase.Invalidate;
 begin
   if not FLockUpdate then
   begin
+    inherited;
     CanvasStack.Clear;
     CanvasStack.TrimExcess;
     inherited Invalidate;
@@ -2503,7 +2504,7 @@ end;
 procedure TzCustomObjInspector.DoExtraRectClick;
 var
   PItem: PPropItem;
-  Value, LValue: TValue;
+  Value: TValue;
 begin
   if FReadOnly then
     Exit;
@@ -2528,7 +2529,7 @@ begin
   M := Default(TWMVScroll);
   M.ScrollCode :=  SB_LINEDOWN;
   WMVScroll(M);
-  inherited DoMouseWheelDown(Shift, MousePos);
+  Result := inherited DoMouseWheelDown(Shift, MousePos);
 end;
 
 function TzCustomObjInspector.DoMouseWheelUp(Shift: TShiftState;
@@ -2542,7 +2543,7 @@ begin
     M := Default(TWMVScroll);
   M.ScrollCode :=  SB_LINEUP;
   WMVScroll(M);
-  inherited DoMouseWheelUp(Shift, MousePos);
+  Result := inherited DoMouseWheelUp(Shift, MousePos);
 end;
 
 function TzCustomObjInspector.DoSelectCaret(Index: Integer): Boolean;
@@ -2890,7 +2891,6 @@ begin
     Exit;
   P := Point(X, Y);
   Index := GetIndexFromPoint(P);
-  MustShow := False;
   if (Index > -1) and (FPrevHintIndex <> Index) then
     if (FPropsNeedHint or FValuesNeedHint) then
     begin
@@ -3136,8 +3136,6 @@ begin
   Canvas.Refresh;
   DYT := 0;
   DYB := 0;
-  PrevPos := 0;
-  NextPos := 0;
 
   if (Index - 1) >= 0 then
   begin
