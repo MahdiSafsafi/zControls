@@ -379,7 +379,7 @@ type
     procedure ComponentChanged; virtual;
     procedure Changed; virtual;
   public
-    procedure Invalidate;
+    procedure Invalidate; override;
     procedure BeginUpdate;
     procedure EndUpdate;
     function IsItemCircularLink(PItem: PPropItem): Boolean;
@@ -589,6 +589,10 @@ type
     procedure SetAllowSearch(const Value: Boolean);
     procedure SetReadOnlyColor(const Value: TColor);
   protected
+    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
+      override;
+    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
+      override;
     procedure CreateWnd; override;
     procedure Paint; override;
     function DoSelectCaret(Index: Integer): Boolean;
@@ -698,12 +702,14 @@ type
     property ShowGridLines;
     property GridColor;
     property SplitterColor;
+    property ReadOnlyColor; 
     property FixedSplitter;
     property ReadOnly;
     property TrackChange;
     property GutterWidth;
     property ShowItemHint;
     property SortByCategory;
+    property SplitterPos; 
     property HeaderPropText;
     property HeaderValueText;
     property OnClick;
@@ -1193,6 +1199,8 @@ end;
 
 function TPropItem.IsEnum: Boolean;
 begin
+  if not Assigned(Prop) then
+    Exit(False);
   if IsCategory then
     Exit(False);
   Result := Prop.PropertyType.TypeKind = tkEnumeration;
@@ -1306,6 +1314,7 @@ procedure TzObjInspectorBase.Invalidate;
 begin
   if not FLockUpdate then
   begin
+    inherited;
     CanvasStack.Clear;
     CanvasStack.TrimExcess;
     inherited Invalidate;
@@ -2495,7 +2504,7 @@ end;
 procedure TzCustomObjInspector.DoExtraRectClick;
 var
   PItem: PPropItem;
-  Value, LValue: TValue;
+  Value: TValue;
 begin
   if FReadOnly then
     Exit;
@@ -2507,6 +2516,34 @@ begin
       Exit;
   Value := DefaultValueManager.GetExtraRectResultValue(PItem);
   DoSetValue(PItem, Value);
+end;
+
+function TzCustomObjInspector.DoMouseWheelDown(Shift: TShiftState;
+  MousePos: TPoint): Boolean;
+var
+  M : TWMVScroll;
+begin
+  if Assigned(FPropInspEdit.FList)
+    and IsWindowVisible(FPropInspEdit.FList.Handle) then
+    Exit(False);
+  M := Default(TWMVScroll);
+  M.ScrollCode :=  SB_LINEDOWN;
+  WMVScroll(M);
+  Result := inherited DoMouseWheelDown(Shift, MousePos);
+end;
+
+function TzCustomObjInspector.DoMouseWheelUp(Shift: TShiftState;
+  MousePos: TPoint): Boolean;
+var
+  M : TWMVScroll;
+begin
+  if Assigned(FPropInspEdit.FList)
+    and IsWindowVisible(FPropInspEdit.FList.Handle) then
+    Exit(False);
+    M := Default(TWMVScroll);
+  M.ScrollCode :=  SB_LINEUP;
+  WMVScroll(M);
+  Result := inherited DoMouseWheelUp(Shift, MousePos);
 end;
 
 function TzCustomObjInspector.DoSelectCaret(Index: Integer): Boolean;
@@ -2854,7 +2891,6 @@ begin
     Exit;
   P := Point(X, Y);
   Index := GetIndexFromPoint(P);
-  MustShow := False;
   if (Index > -1) and (FPrevHintIndex <> Index) then
     if (FPropsNeedHint or FValuesNeedHint) then
     begin
@@ -3100,8 +3136,6 @@ begin
   Canvas.Refresh;
   DYT := 0;
   DYB := 0;
-  PrevPos := 0;
-  NextPos := 0;
 
   if (Index - 1) >= 0 then
   begin
@@ -4327,13 +4361,16 @@ var
 begin
 
   Value := PItem.Value;
-  case PItem.Prop.PropertyType.TypeKind of
-    tkMethod:
-      Exit(vtMethod);
-    tkString, tkWString, tkUString:
-      Exit(vtString);
-    tkWChar, tkChar:
-      Exit(vtChar);
+  if Assigned(PItem.Prop) then
+  begin
+    case PItem.Prop.PropertyType.TypeKind of
+      tkMethod:
+        Exit(vtMethod);
+      tkString, tkWString, tkUString:
+        Exit(vtString);
+      tkWChar, tkChar:
+        Exit(vtChar);
+    end;
   end;
   if Value.TypeInfo = TypeInfo(TColor) then
     Exit(vtColor)
