@@ -6,7 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, zBase, zObjInspector, Vcl.StdCtrls,
-  Vcl.Buttons, Vcl.ExtCtrls, Vcl.Styles, Vcl.Themes, Vcl.Grids, Vcl.ValEdit;
+  Vcl.Buttons, Vcl.ExtCtrls, Vcl.Styles, Vcl.Themes, Vcl.Grids, Vcl.ValEdit,
+  Vcl.Menus;
 
 type
   TMain = class(TForm)
@@ -31,6 +32,8 @@ type
     Image1: TImage;
     BalloonHint1: TBalloonHint;
     Label3: TLabel;
+    PopupMenu1: TPopupMenu;
+    PopupItemTest1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ObjsComboChange(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
@@ -116,6 +119,7 @@ begin
   with GroupBox1 do
     for i := 0 to ControlCount - 1 do
       ObjsCombo.Items.AddObject(Controls[i].Name, Controls[i]);
+ObjsCombo.Items.AddObject(PopupItemTest1.Name,PopupItemTest1);
   with ObjsCombo do
   begin
     ItemIndex := 0;

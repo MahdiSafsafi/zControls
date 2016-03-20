@@ -42,12 +42,14 @@ object Main: TMain
     ShowGridLines = False
     GridColor = clBlack
     SplitterColor = clGray
+    ReadOnlyColor = clGrayText
     FixedSplitter = False
     ReadOnly = False
     TrackChange = False
     GutterWidth = 12
     ShowItemHint = True
     SortByCategory = False
+    SplitterPos = 100
     HeaderPropText = 'Property'
     HeaderValueText = 'Value'
     OnBeforeAddItem = zObjectInspector1BeforeAddItem
@@ -112,6 +114,7 @@ object Main: TMain
       Height = 341
       Align = alClient
       Caption = 'Controls :'
+      PopupMenu = PopupMenu1
       TabOrder = 0
       object SpeedButton1: TSpeedButton
         Left = 16
@@ -215,5 +218,13 @@ object Main: TMain
   object BalloonHint1: TBalloonHint
     Left = 384
     Top = 216
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 392
+    Top = 224
+    object PopupItemTest1: TMenuItem
+      Caption = 'PopupItemTest'
+      ShortCut = 16468
+    end
   end
 end

@@ -10,7 +10,7 @@
 // The Original Code is zObjInspList.pas.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2015 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
@@ -29,6 +29,8 @@ uses
   System.Classes,
   System.Types,
   System.UITypes,
+  System.SysUtils,
+  Vcl.Consts,
   Vcl.Controls,
   Vcl.Forms,
   Vcl.StdCtrls,
@@ -70,7 +72,113 @@ type
     property Cursors[Index: Integer]: TCursor read GetCursor;
   end;
 
+  TzPopupShortCutListBox = class(TzCustomPopupListBox)
+  private
+    function GetShortCut(Index: Integer): TShortCut;
+  protected
+    procedure EnumShortCuts;
+    procedure PopulateList;
+    procedure CreateWnd; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    property ShortCuts[Index: Integer]: TShortCut read GetShortCut;
+  end;
+
+function fShortCutToText(ShortCut: TShortCut): string;
+
 implementation
+
+type
+  TMenuKeyCap = (mkcBkSp, mkcTab, mkcEsc, mkcEnter, mkcSpace, mkcPgUp, mkcPgDn, mkcEnd, mkcHome, mkcLeft, mkcUp, mkcRight, mkcDown, mkcIns, mkcDel, mkcShift, mkcCtrl, mkcAlt);
+
+var
+  MenuKeyCaps: array [TMenuKeyCap] of string = (
+    SmkcBkSp,
+    SmkcTab,
+    SmkcEsc,
+    SmkcEnter,
+    SmkcSpace,
+    SmkcPgUp,
+    SmkcPgDn,
+    SmkcEnd,
+    SmkcHome,
+    SmkcLeft,
+    SmkcUp,
+    SmkcRight,
+    SmkcDown,
+    SmkcIns,
+    SmkcDel,
+    SmkcShift,
+    SmkcCtrl,
+    SmkcAlt
+  );
+
+function GetSpecialName(ShortCut: TShortCut): string;
+var
+  ScanCode: Integer;
+{$IF DEFINED(CLR)}
+  KeyName: StringBuilder;
+{$ELSE}
+  KeyName: array [0 .. 255] of Char;
+{$ENDIF}
+begin
+  Result := '';
+  ScanCode := MapVirtualKey(LoByte(Word(ShortCut)), 0) shl 16;
+  if ScanCode <> 0 then
+  begin
+{$IF DEFINED(CLR)}
+    KeyName := StringBuilder.Create(256);
+    GetKeyNameText(ScanCode, KeyName, KeyName.Capacity);
+    GetSpecialName := KeyName.ToString;
+{$ELSE}
+    if GetKeyNameText(ScanCode, KeyName, Length(KeyName)) <> 0 then
+      Result := KeyName
+    else
+      Result := '';
+{$ENDIF}
+  end;
+end;
+
+function fShortCutToText(ShortCut: TShortCut): string;
+{ The original ShortCutToText function found in Vcl.Menus
+  has a bug with scCommand !!! }
+var
+  Name: string;
+  Key: Byte;
+
+begin
+  if ShortCut = scNone then
+    Exit('(None)');
+  Key := LoByte(Word(ShortCut));
+  case Key of
+    $08, $09: Name := MenuKeyCaps[TMenuKeyCap(Ord(mkcBkSp) + Key - $08)];
+    $0D: Name := MenuKeyCaps[mkcEnter];
+    $1B: Name := MenuKeyCaps[mkcEsc];
+    $20 .. $28: Name := MenuKeyCaps[TMenuKeyCap(Ord(mkcSpace) + Key - $20)];
+    $2D .. $2E: Name := MenuKeyCaps[TMenuKeyCap(Ord(mkcIns) + Key - $2D)];
+    $30 .. $39: Name := Chr(Key - $30 + Ord('0'));
+    $41 .. $5A: Name := Chr(Key - $41 + Ord('A'));
+    $60 .. $69: Name := Chr(Key - $60 + Ord('0'));
+    $70 .. $87: Name := 'F' + IntToStr(Key - $6F);
+  else Name := GetSpecialName(ShortCut);
+  end;
+  if Name <> '' then
+  begin
+    Result := '';
+    if ShortCut and scShift <> 0 then
+      Result := Result + MenuKeyCaps[mkcShift];
+    if ShortCut and scCtrl <> 0 then
+      Result := Result + MenuKeyCaps[mkcCtrl];
+    if ShortCut and scAlt <> 0 then
+      Result := Result + MenuKeyCaps[mkcAlt];
+    { ---> Fix scCommand bug <--- }
+    if ShortCut and scCommand <> 0 then
+      Result := Result + 'Cmd+';
+    Result := Result + Name;
+  end
+  else
+    Result := '';
+end;
 
 { TzPopupColorListBox }
 
@@ -196,6 +304,75 @@ begin
   Items.Clear;
   Items.BeginUpdate;
   GetCursorValues(CursorCallBack);
+  Items.EndUpdate;
+end;
+
+{ TzPopupShortCutListBox }
+
+constructor TzPopupShortCutListBox.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+end;
+
+procedure TzPopupShortCutListBox.CreateWnd;
+begin
+  inherited;
+  PopulateList;
+end;
+
+procedure TzPopupShortCutListBox.EnumShortCuts;
+var
+  C: Byte;
+  K: Integer;
+const
+  MultiKeysArray: array [0 .. 5] of TShortCut = (scCtrl, scCtrl + scAlt, scCommand, scCtrl + scCommand, scShift + scCommand, scCommand + scAlt);
+  UniqueKeysArray: array [0 .. 3] of TShortCut = (scShift, scCtrl, scAlt, scCommand);
+
+  procedure AddShortCut(ShortCut: TShortCut);
+  begin
+    Items.AddObject(fShortCutToText(ShortCut), TObject(ShortCut));
+  end;
+
+begin
+  AddShortCut(scNone);
+  { Keys + (A .. Z) }
+  for K := Low(MultiKeysArray) to High(MultiKeysArray) do
+  begin
+    for C := $41 to $5A do
+      AddShortCut(C or MultiKeysArray[K]);
+  end;
+
+  { Keys + (F1 .. F12) }
+  for K := Low(MultiKeysArray) to High(MultiKeysArray) do
+  begin
+    for C := $70 to $7B do
+      AddShortCut(C or MultiKeysArray[K]);
+  end;
+
+  { Key + (Insert,Delete,Enter,Esc) }
+  for K := Low(UniqueKeysArray) to High(UniqueKeysArray) do
+  begin
+    AddShortCut(UniqueKeysArray[K] + $2D); // Insert
+    AddShortCut(UniqueKeysArray[K] + $2E); // Delete
+    AddShortCut(UniqueKeysArray[K] + $0D); // Enter
+    AddShortCut(UniqueKeysArray[K] + $1B); // Esc
+  end;
+
+  { Special ShortCuts }
+  AddShortCut(scAlt + $08); // Alt+BkSp
+  AddShortCut(scShift + scAlt + $08); // Shift+Alt+BkSp
+end;
+
+function TzPopupShortCutListBox.GetShortCut(Index: Integer): TShortCut;
+begin
+  Result := TShortCut(Items.Objects[Index]);
+end;
+
+procedure TzPopupShortCutListBox.PopulateList;
+begin
+  Items.Clear;
+  Items.BeginUpdate;
+  EnumShortCuts;
   Items.EndUpdate;
 end;
 
