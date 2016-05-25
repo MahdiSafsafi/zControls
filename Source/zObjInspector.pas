@@ -347,9 +347,11 @@ type
     FSortByCategory: Boolean;
     FDefaultCategoryName: String;
     FLockUpdate: Boolean;
+    FObjectVisibility: TMemberVisibility;
     procedure SetComponent(Value: TObject);
     function GetItemOrder(PItem: PPropItem): Integer;
     procedure SetSortByCategory(const Value: Boolean);
+    procedure SetObjectVisibility(const Value: TMemberVisibility);
   protected
     procedure UpdateVisibleItems;
     procedure UpdateItems;
@@ -376,6 +378,8 @@ type
     property SortByCategory: Boolean read FSortByCategory write SetSortByCategory;
     property DefaultCategoryName: String read FDefaultCategoryName write FDefaultCategoryName;
     property OnBeforeAddItem: TPropItemEvent read FOnBeforeAddItem write FOnBeforeAddItem;
+    // visibility of plain object (not descendant of TPersistent)
+    property ObjectVisibility: TMemberVisibility read FObjectVisibility write SetObjectVisibility default mvPublic;
   end;
 
   TzObjInspectorList = class(TzObjInspectorBase)
@@ -660,6 +664,7 @@ type
     property SplitterPos;
     property HeaderPropText;
     property HeaderValueText;
+    property ObjectVisibility;
     property OnClick;
     property OnContextPopup;
     property OnDragDrop;
@@ -816,7 +821,16 @@ begin
   end;
 end;
 
-function ObjHasAtLeastOneChild(Obj: TObject): Boolean;
+function IsPropVisible(const Prop: TRttiProperty; const PropOwner: TObject; ObjectVisibility: TMemberVisibility): Boolean;
+begin
+  if PropOwner is TPersistent then
+    Result := Prop.Visibility = mvPublished
+  else // if PropOwner is TObject then
+    Result := Prop.Visibility >= ObjectVisibility;
+end;
+
+
+function ObjHasAtLeastOneChild(Obj: TObject; ObjVisibility: TMemberVisibility): Boolean;
 var
   LCtx: TRttiContext;
   LType: TRttiType;
@@ -830,7 +844,7 @@ begin
   LType := LCtx.GetType(Obj.ClassInfo);
   LPropList := TzRttiType(LType).GetUsedProperties;
   for LProp in LPropList do
-    if LProp.Visibility = mvPublished then
+    if IsPropVisible(LProp, Obj, ObjVisibility) then
       Exit(True);
 end;
 
@@ -982,7 +996,7 @@ begin
     Exit(False);
   Result := not Value.IsEmpty;
   if Result and IsClass then
-    Result := ObjHasAtLeastOneChild(Value.AsObject);
+    Result := ObjHasAtLeastOneChild(Value.AsObject, TzObjInspectorBase(Insp).ObjectVisibility);
 end;
 
 function TPropItem.GetDynInstance: TObject;
@@ -1188,6 +1202,7 @@ begin
   FSortByCategory := False;
   FOnBeforeAddItem := nil;
   FComponent := nil;
+  FObjectVisibility := mvPublic;
   DefaultValueManager := DefaultValueManager;
 end;
 
@@ -1433,7 +1448,7 @@ var
       Exit(False);
     LPropList := TzRttiType(LType).GetUsedProperties;
     for LProp in LPropList do
-      if LProp.Visibility = mvPublished then
+      if IsPropVisible(LProp, LComponent, FObjectVisibility) then
         if (LProp.PropertyType.TypeKind = tkClass) then
         begin
           s := LProp.PropertyType.ToString;
@@ -1501,7 +1516,7 @@ var
     FRttiType := FContext.GetType(AInstance.ClassInfo);
     LPropList := TzRttiType(FRttiType).GetUsedProperties;
     for LProp in LPropList do
-      if LProp.Visibility = mvPublished then
+      if IsPropVisible(LProp, AInstance, FObjectVisibility) then
       begin
         Allow := True;
         LQName := QualifiedName + '.' + LProp.Name;
@@ -4656,6 +4671,14 @@ begin
     FPropItem := Value;
     InitDialog;
   end;
+end;
+
+procedure TzObjInspectorBase.SetObjectVisibility(const Value: TMemberVisibility);
+begin
+  if Value >= mvPublic then
+    FObjectVisibility := Value
+  else
+    raise InspException.Create('Object Visibility must be mvPublic or mvPublished.');
 end;
 
 end.
