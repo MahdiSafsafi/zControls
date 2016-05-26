@@ -714,9 +714,9 @@ resourcestring
   SSelNonVisibleItemErr = 'Could not select a non visible item.';
 
 const
-
   PlusMinWidth = 10;
   ColorWidth = 16;
+  cFloatDigits = 4; // # of digits to format float to string. (see help of SysUtils.TFloatFormat)
 
 type
   InspException = class(Exception);
@@ -4293,17 +4293,17 @@ begin
   end
   else if PItem.Value.TypeInfo = TypeInfo(Single) then
   begin
-    Result := FloatToStrF(TValueData(Value).FAsSingle, ffGeneral, 7, 4);
+    Result := FloatToStrF(TValueData(Value).FAsSingle, ffGeneral, 7, cFloatDigits);
     Exit;
   end
   else if PItem.Value.TypeInfo = TypeInfo(Double) then
   begin
-    Result := FloatToStrF(TValueData(Value).FAsDouble, ffGeneral, 15, 4);
+    Result := FloatToStrF(TValueData(Value).FAsDouble, ffGeneral, 15, cFloatDigits);
     Exit;
   end
   else if PItem.Value.TypeInfo = TypeInfo(Extended) then
   begin
-    Result := FloatToStrF(Value.AsExtended, ffGeneral, 18, 4);
+    Result := FloatToStrF(Value.AsExtended, ffGeneral, 18, cFloatDigits);
     Exit;
   end;
 
