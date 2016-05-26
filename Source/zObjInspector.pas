@@ -68,6 +68,9 @@ const
   vtFont = 11;
   vtIcon = 12;
   vtShortCut = 13;
+  vtSingle = 14;
+  vtDouble = 15;
+  vtExtended = 16;
 
   dcInit = 0;
   dcBeforeDestroying = 1;
@@ -764,9 +767,9 @@ resourcestring
   SSelNonVisibleItemErr = 'Could not select a non visible item.';
 
 const
-
   PlusMinWidth = 10;
-  ColorWidth = 13;
+  ColorWidth = 16;
+  cFloatDigits = 4; // # of digits to format float to string. (see help of SysUtils.TFloatFormat)
 
 type
   InspException = class(Exception);
@@ -3648,6 +3651,9 @@ var
   s: string;
   vSInt: Int64;
   vUInt: UInt64;
+  vSingle: Single;
+  vDouble: Double;
+  vExtended: Extended;
   Value: TValue;
   Index: Integer;
 begin
@@ -3686,7 +3692,23 @@ begin
     end
   end;
   Value := FPropItem.Value;
-  if IsValueSigned(Value) then
+
+  if Value.TypeInfo = TypeInfo(Single) then
+  begin
+    vSingle := DefaultValueManager.StrToValue<Single>(FPropItem, s);
+    Value := DefaultValueManager.GetValue(FPropItem, vSingle);
+  end
+  else if Value.TypeInfo = TypeInfo(Double) then
+  begin
+    vDouble := DefaultValueManager.StrToValue<Double>(FPropItem, s);
+    Value := DefaultValueManager.GetValue(FPropItem, vDouble);
+  end
+  else if Value.TypeInfo = TypeInfo(Extended) then
+  begin
+    vExtended := DefaultValueManager.StrToValue<Extended>(FPropItem, s);
+    Value := DefaultValueManager.GetValue(FPropItem, vExtended);
+  end
+  else if IsValueSigned(Value) then
   begin
     vSInt := DefaultValueManager.StrToValue<Int64>(FPropItem, s);
     Value := DefaultValueManager.GetValue(FPropItem, vSInt);
@@ -4225,6 +4247,21 @@ begin
         TValueData(Val).FAsUByte := Byte(Value);
         Exit(Val);
       end;
+    vtSingle:
+      begin
+        TValueData(Val).FAsSingle := Single(Value);
+        Exit(Val);
+      end;
+    vtDouble:
+      begin
+        TValueData(Val).FAsDouble := Double(Value);
+        Exit(Val);
+      end;
+    vtExtended:
+      begin
+        TValueData(Val).FAsExtended := Extended(Value);
+        Exit(Val);
+      end;
   end;
 
   if PItem.IsSetElement then
@@ -4339,12 +4376,28 @@ begin
           Result := TComponent(LObj).Name;
     end;
     Exit;
-  end;
-  if PItem.Prop.PropertyType.TypeKind = tkMethod then
+  end
+  else if PItem.Prop.PropertyType.TypeKind = tkMethod then
   begin
     Result := GetMethodName(Value, PItem.ComponentRoot);
     Exit;
+  end
+  else if PItem.Value.TypeInfo = TypeInfo(Single) then
+  begin
+    Result := FloatToStrF(TValueData(Value).FAsSingle, ffGeneral, 7, cFloatDigits);
+    Exit;
+  end
+  else if PItem.Value.TypeInfo = TypeInfo(Double) then
+  begin
+    Result := FloatToStrF(TValueData(Value).FAsDouble, ffGeneral, 15, cFloatDigits);
+    Exit;
+  end
+  else if PItem.Value.TypeInfo = TypeInfo(Extended) then
+  begin
+    Result := FloatToStrF(Value.AsExtended, ffGeneral, 18, cFloatDigits);
+    Exit;
   end;
+
   Result := Value.ToString;
 end;
 
@@ -4355,6 +4408,9 @@ var
 begin
 
   Value := PItem.Value;
+  if Value.TypeInfo = nil then
+    Exit(vtUnknown);
+
   if Assigned(PItem.Prop) then
   begin
     case PItem.Prop.PropertyType.TypeKind of
@@ -4376,7 +4432,13 @@ begin
   else if Value.TypeInfo = TypeInfo(Boolean) then
     Exit(vtBool)
   else if Value.TypeInfo = TypeInfo(Bool) then
-    Exit(vtBool);
+    Exit(vtBool)
+  else if Value.TypeInfo = TypeInfo(Single) then
+    Exit(vtSingle)
+  else if Value.TypeInfo = TypeInfo(Double) then
+    Exit(vtDouble)
+  else if Value.TypeInfo = TypeInfo(Extended) then
+    Exit(vtExtended);
 
   if PItem.IsEnum then
     Exit(vtEnum);
@@ -4525,15 +4587,24 @@ class function TzCustomValueManager.StrToValue<T>(const PItem: PPropItem;
 var
   vSInt: Int64;
   vUInt: UInt64;
+  vSingle: Single;
+  vDouble: Double;
+  vExtended: Extended;
   Value: TValue;
   ValSign: Boolean;
   sR: T absolute vSInt;
   uR: T absolute vUInt;
+  fsR: T absolute vSingle;
+  fdR: T absolute vDouble;
+  feR: T absolute vExtended;
   E: Integer;
 begin
 
   vUInt := 0;
   vSInt := 0;
+  vSingle := 0.0;
+  vDouble := 0.0;
+  vExtended := 0.0;
   Value := PItem.Value;
   ValSign := (Value.TypeData.MinValue < 0) or
     (Value.TypeData.MinInt64Value < 0);
@@ -4549,6 +4620,24 @@ begin
         if s <> '' then
           vUInt := Ord(s[1]);
         Result := uR;
+        Exit;
+      end;
+    vtSingle:
+      begin
+        TryStrToFloat(s, vSingle);
+        Result := fsR;
+        Exit;
+      end;
+    vtDouble:
+      begin
+        TryStrToFloat(s, vDouble);
+        Result := fdR;
+        Exit;
+      end;
+    vtExtended:
+      begin
+        TryStrToFloat(s, vExtended);
+        Result := feR;
         Exit;
       end;
   end;
