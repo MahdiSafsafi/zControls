@@ -4316,6 +4316,9 @@ var
 begin
 
   Value := PItem.Value;
+  if Value.TypeInfo = nil then
+    Exit(vtUnknown);
+
   if Assigned(PItem.Prop) then
   begin
     case PItem.Prop.PropertyType.TypeKind of
