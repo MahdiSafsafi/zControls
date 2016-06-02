@@ -379,10 +379,12 @@ type
     FCircularLinkProps: TList<String>;
     FDefPropValue: TDictionary<String, String>;
     FOnBeforeAddItem: TPropItemEvent;
+    FOnAutoExpandItemOnInit: TPropItemEvent;
     FSortByCategory: Boolean;
     FDefaultCategoryName: String;
     FLockUpdate: Boolean;
     FObjectVisibility: TMemberVisibility;
+    FIsSettingComponent: Boolean;
     procedure SetComponent(Value: TObject);
     function GetItemOrder(PItem: PPropItem): Integer;
     procedure SetSortByCategory(const Value: Boolean);
@@ -415,6 +417,8 @@ type
     property SortByCategory: Boolean read FSortByCategory write SetSortByCategory;
     property DefaultCategoryName: String read FDefaultCategoryName write FDefaultCategoryName;
     property OnBeforeAddItem: TPropItemEvent read FOnBeforeAddItem write FOnBeforeAddItem;
+    // Expand item automatically on initialize (if this handler returns True)
+    property OnAutoExpandItemOnInit: TPropItemEvent read FOnAutoExpandItemOnInit write FOnAutoExpandItemOnInit;
     // visibility of plain object (not descendant of TPersistent)
     property ObjectVisibility: TMemberVisibility read FObjectVisibility write SetObjectVisibility default mvPublic;
     property FloatPreferences: TzFloatPreferences read GetFloatPreferences write SetFloatPreferences;
@@ -724,6 +728,7 @@ type
     property OnStartDock;
     property OnStartDrag;
     property OnBeforeAddItem;
+    property OnAutoExpandItemOnInit;
     property OnGetItemReadOnly;
     property OnHeaderMouseDown;
     property OnSplitterPosChanged;
@@ -1424,10 +1429,15 @@ procedure TzObjInspectorBase.SetComponent(Value: TObject);
 begin
   if Value <> FComponent then
   begin
-    if Assigned(FComponent) and (FComponent is TzObjectHost) then
-      FreeAndNil(FComponent);
-    FComponent := Value;
-    ComponentChanged;
+    FIsSettingComponent := True;
+    try
+      if Assigned(FComponent) and (FComponent is TzObjectHost) then
+        FreeAndNil(FComponent);
+      FComponent := Value;
+      ComponentChanged;
+    finally
+      FIsSettingComponent := False;
+    end;
   end;
 end;
 
@@ -1727,6 +1737,13 @@ begin
     begin
       if FExpandedList.Contains(PItem.QualifiedName) then
         MakeChildsVisible(PItem, True);
+    end
+    else if (PItem.Count > 0) and
+            FIsSettingComponent and
+            Assigned(FOnAutoExpandItemOnInit) and
+            FOnAutoExpandItemOnInit(Self, PItem) then
+    begin
+      MakeChildsVisible(PItem, True);
     end;
     LVisible := PItem.FVisible;
     if LVisible then
