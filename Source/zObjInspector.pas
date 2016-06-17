@@ -48,6 +48,7 @@ uses
   zCanvasStack,
   zRecList,
   zUtils,
+  FloatConv,
   Generics.Collections,
   Generics.Defaults,
   RTTI,
@@ -162,35 +163,20 @@ type
 
   TzFloatPreference = class(TPersistent)
   private
-    FFormat: TFloatFormat;
-    FPrecision: Integer;
-    FDigits: Integer;
+    FExpPrecision: Integer;
+    FMaxDigits: Integer;
+    FFormatOptions: TFloatFormatOptions;
   public
     procedure Assign(Source: TPersistent); override;
   published
-    property Format: TFloatFormat read FFormat write FFormat;
-    property Precision: Integer read FPrecision write FPrecision;
-    property Digits: Integer read FDigits write FDigits;
-  end;
-
-  TzFloatPreferences = class(TPersistent)
-  private
-    FSinglePrefs: TzFloatPreference;
-    FDoublePrefs: TzFloatPreference;
-    FExtendedPrefs: TzFloatPreference;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Assign(Source: TPersistent); override;
-  published
-    property SinglePrefs: TzFloatPreference read FSinglePrefs write FSinglePrefs;
-    property DoulblePrefs: TzFloatPreference read FDoublePrefs write FDoublePrefs;
-    property ExtendedPrefs: TzFloatPreference read FExtendedPrefs write FExtendedPrefs;
+    property MaxDigits: Integer read FMaxDigits write FMaxDigits;
+    property ExpPrecision: Integer read FExpPrecision write FExpPrecision;
+    property FormatOptions: TFloatFormatOptions read FFormatOptions write FFormatOptions;
   end;
 
   TzCustomValueManager = class
   private
-    class var FloatPreferences: TzFloatPreferences;
+    class var FloatPreference: TzFloatPreference;
     class constructor Create;
     class destructor Destroy;
   protected
@@ -389,8 +375,8 @@ type
     function GetItemOrder(PItem: PPropItem): Integer;
     procedure SetSortByCategory(const Value: Boolean);
     procedure SetObjectVisibility(const Value: TMemberVisibility);
-    function GetFloatPreferences: TzFloatPreferences;
-    procedure SetFloatPreferences(const Value: TzFloatPreferences);
+    function GetFloatPreference: TzFloatPreference;
+    procedure SetFloatPreference(const Value: TzFloatPreference);
   protected
     procedure UpdateVisibleItems;
     procedure UpdateItems;
@@ -421,7 +407,7 @@ type
     property OnAutoExpandItemOnInit: TPropItemEvent read FOnAutoExpandItemOnInit write FOnAutoExpandItemOnInit;
     // visibility of plain object (not descendant of TPersistent)
     property ObjectVisibility: TMemberVisibility read FObjectVisibility write SetObjectVisibility default mvPublic;
-    property FloatPreferences: TzFloatPreferences read GetFloatPreferences write SetFloatPreferences;
+    property FloatPreference: TzFloatPreference read GetFloatPreference write SetFloatPreference;
   end;
 
   TzObjInspectorList = class(TzObjInspectorBase)
@@ -707,7 +693,7 @@ type
     property HeaderPropText;
     property HeaderValueText;
     property ObjectVisibility;
-    property FloatPreferences;
+    property FloatPreference;
     property OnClick;
     property OnContextPopup;
     property OnDragDrop;
@@ -759,13 +745,9 @@ const
   ColorWidth = 16;
 
 const
-  cDefaultFloatFormat: TFloatFormat = ffGeneral;
-  // precision
-  cDefaultSinglePrecision = 7;
-  cDefaultDoublePrecision = 15;
-  cDefaultExtendedPrecision = 18;
-  //
-  cDefaultDigits = 2;
+  cDefaultMaxDigits = 2;
+  cDefaultExpPrecision = 6;
+  cDefaultFormatOptions: TFloatFormatOptions = [];
 
 type
   InspException = class(Exception);
@@ -1755,14 +1737,14 @@ begin
 
 end;
 
-function TzObjInspectorBase.GetFloatPreferences: TzFloatPreferences;
+function TzObjInspectorBase.GetFloatPreference: TzFloatPreference;
 begin
-  Result := TzCustomValueManager.FloatPreferences;
+  Result := TzCustomValueManager.FloatPreference;
 end;
 
-procedure TzObjInspectorBase.SetFloatPreferences(const Value: TzFloatPreferences);
+procedure TzObjInspectorBase.SetFloatPreference(const Value: TzFloatPreference);
 begin
-  TzCustomValueManager.FloatPreferences := Value;
+  TzCustomValueManager.FloatPreference := Value;
   UpdateProperties;
 end;
 
@@ -4053,33 +4035,19 @@ end;
 
 class constructor TzCustomValueManager.Create;
 begin
-  TzCustomValueManager.FloatPreferences := TzFloatPreferences.Create;
+  TzCustomValueManager.FloatPreference := TzFloatPreference.Create;
 
-  with TzCustomValueManager.FloatPreferences.SinglePrefs do
+  with TzCustomValueManager.FloatPreference do
   begin
-    Format    := cDefaultFloatFormat;
-    Precision := cDefaultSinglePrecision;
-    Digits    := cDefaultDigits;
-  end;
-
-  with TzCustomValueManager.FloatPreferences.DoulblePrefs do
-  begin
-    Format    := cDefaultFloatFormat;
-    Precision := cDefaultDoublePrecision;
-    Digits    := cDefaultDigits;
-  end;
-
-  with TzCustomValueManager.FloatPreferences.ExtendedPrefs do
-  begin
-    Format    := cDefaultFloatFormat;
-    Precision := cDefaultExtendedPrecision;
-    Digits    := cDefaultDigits;
+    ExpPrecision  := cDefaultExpPrecision;
+    MaxDigits     := cDefaultMaxDigits;
+    FormatOptions := cDefaultFormatOptions;
   end;
 end;
 
 class destructor TzCustomValueManager.Destroy;
 begin
-  TzCustomValueManager.FloatPreferences.Free;
+  TzCustomValueManager.FloatPreference.Free;
 end;
 
 class procedure TzCustomValueManager.DialogCode(const PItem: PPropItem; Dialog: TComponent; Code: Integer);
@@ -4396,20 +4364,20 @@ begin
   end
   else if PItem.Value.TypeInfo = TypeInfo(Single) then
   begin
-    with TzCustomValueManager.FloatPreferences.SinglePrefs do
-      Result := FloatToStrF(TValueData(Value).FAsSingle, Format, Precision, Digits);
+    with TzCustomValueManager.FloatPreference do
+      Result := MyFormatFloat(TValueData(Value).FAsSingle, MaxDigits, ExpPrecision, FormatOptions);
     Exit;
   end
   else if PItem.Value.TypeInfo = TypeInfo(Double) then
   begin
-    with TzCustomValueManager.FloatPreferences.DoulblePrefs do
-      Result := FloatToStrF(TValueData(Value).FAsDouble, Format, Precision, Digits);
+    with TzCustomValueManager.FloatPreference do
+      Result := MyFormatFloat(TValueData(Value).FAsDouble, MaxDigits, ExpPrecision, FormatOptions);
     Exit;
   end
   else if PItem.Value.TypeInfo = TypeInfo(Extended) then
   begin
-    with TzCustomValueManager.FloatPreferences.ExtendedPrefs do
-      Result := FloatToStrF(Value.AsExtended, Format, Precision, Digits);
+    with TzCustomValueManager.FloatPreference do
+      Result := MyFormatFloat(Value.AsExtended, MaxDigits, ExpPrecision, FormatOptions);
     Exit;
   end;
 
@@ -4630,19 +4598,19 @@ begin
       end;
     vtSingle:
       begin
-        TryStrToFloat(s, vSingle);
+        MyTryStrToFloat(s, vSingle);
         Result := fsR;
         Exit;
       end;
     vtDouble:
       begin
-        TryStrToFloat(s, vDouble);
+        MyTryStrToFloat(s, vDouble);
         Result := fdR;
         Exit;
       end;
     vtExtended:
       begin
-        TryStrToFloat(s, vExtended);
+        MyTryStrToFloat(s, vExtended);
         Result := feR;
         Exit;
       end;
@@ -4882,43 +4850,12 @@ procedure TzFloatPreference.Assign(Source: TPersistent);
 begin
   if Source is TzFloatPreference then
   begin
-    Format := TzFloatPreference(Source).Format;
-    Precision := TzFloatPreference(Source).Precision;
-    Digits := TzFloatPreference(Source).Digits;
+    MaxDigits := TzFloatPreference(Source).MaxDigits;
+    ExpPrecision := TzFloatPreference(Source).ExpPrecision;
+    FormatOptions := TzFloatPreference(Source).FormatOptions;
   end
   else
     inherited Assign(Source);
 end;
-
-{ TzFloatPreferences }
-
-constructor TzFloatPreferences.Create;
-begin
-  inherited;
-  FSinglePrefs := TzFloatPreference.Create;
-  FDoublePrefs := TzFloatPreference.Create;
-  FExtendedPrefs := TzFloatPreference.Create;
-end;
-
-destructor TzFloatPreferences.Destroy;
-begin
-  FSinglePrefs.Free;
-  FDoublePrefs.Free;
-  FExtendedPrefs.Free;
-  inherited;
-end;
-
-procedure TzFloatPreferences.Assign(Source: TPersistent);
-begin
-  if Source is TzFloatPreferences then
-  begin
-    FSinglePrefs.Assign(TzFloatPreferences(Source).SinglePrefs);
-    FDoublePrefs.Assign(TzFloatPreferences(Source).DoulblePrefs);
-    FExtendedPrefs.Assign(TzFloatPreferences(Source).ExtendedPrefs);
-  end
-  else
-    inherited Assign(Source);
-end;
-
 
 end.

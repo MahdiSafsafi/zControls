@@ -1,4 +1,4 @@
-package zControls_R;
+﻿package zControls_R;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -42,6 +42,10 @@ contains
   zObjInspList in '..\Source\zObjInspList.pas',
   zRecList in '..\Source\zRecList.pas',
   zStringsDialog in '..\Source\zStringsDialog.pas' {StringsDialog},
-  zUtils in '..\Source\zUtils.pas';
+  zUtils in '..\Source\zUtils.pas',
+  FloatConv in '..\Source\FloatConv.pas',
+  FloatConv.Double in '..\Source\FloatConv.Double.pas',
+  FloatConv.Extended in '..\Source\FloatConv.Extended.pas',
+  FloatConv.Single in '..\Source\FloatConv.Single.pas';
 
 end.
