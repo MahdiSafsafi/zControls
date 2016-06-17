@@ -493,6 +493,7 @@ type
     procedure WMVScroll(var Message: TWMVScroll); message WM_VSCROLL;
     procedure WMWINDOWPOSCHANGED(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
     procedure WMERASEBKGND(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+    procedure WMGetDlgCode(var Message: TWMGetDlgCode); message WM_GETDLGCODE;
     function IndexToVirtualIndex(Index: Integer): Integer;
     function GetFirstItemIndex: Integer;
     function GetLastItemIndex: Integer;
@@ -2193,6 +2194,11 @@ begin
   Message.Result := 1;
 end;
 
+procedure TzScrollObjInspectorList.WMGetDlgCode(var Message: TWMGetDlgCode);
+begin
+  Message.Result := DLGC_WANTARROWS;
+end;
+
 procedure TzScrollObjInspectorList.WMSize(var Message: TWMSize);
 begin
   inherited;
@@ -2716,6 +2722,7 @@ var
   LTxt: string;
   i: Integer;
   PItem: PPropItem;
+  NewIndex: Integer;
 begin
   inherited;
   if not FAllowSearch then
@@ -2723,24 +2730,44 @@ begin
   LSelectedItem := SelectedItem;
   if (GetCaretWin = Handle) and (FSelectedIndex > -1) and Assigned(LSelectedItem) then
   begin
-    LTxt := VKeyToStr(Key);
-    if LTxt.IsEmpty then
+    NewIndex := FSelectedIndex;
+    case Key of
+    vkUp:
+      begin
+        Dec(NewIndex);
+        NewIndex := max(0, NewIndex);
+      end;
+    vkDown:
+      begin
+        Inc(NewIndex);
+        NewIndex := min(VisiblePropCount - 1, NewIndex);
+      end;
+    else
+      NewIndex := -1;
+      LTxt := VKeyToStr(Key);
+      if LTxt.IsEmpty then
+      begin
+        FSearchText := '';
+        Exit;
+      end;
+      FSearchText := FSearchText + LTxt;
+      for i := 0 to FVisibleItems.Count - 1 do
+      begin
+        PItem := FVisibleItems[i];
+        if PItem.Parent = LSelectedItem.Parent then
+          if IsStrFirst(FSearchText, PItem.Name) then
+          begin
+            { Respect the case sensitive }
+            FSearchText := Copy(PItem.Name, 0, Length(FSearchText));
+            if DoSelectCaret(i) then
+              Exit;
+          end;
+      end;
+    end;
+    if NewIndex >= 0 then
     begin
       FSearchText := '';
-      Exit;
-    end;
-    FSearchText := FSearchText + LTxt;
-    for i := 0 to FVisibleItems.Count - 1 do
-    begin
-      PItem := FVisibleItems[i];
-      if PItem.Parent = LSelectedItem.Parent then
-        if IsStrFirst(FSearchText, PItem.Name) then
-        begin
-          { Respect the case sensitive }
-          FSearchText := Copy(PItem.Name, 0, Length(FSearchText));
-          if DoSelectCaret(i) then
-            Exit;
-        end;
+      SelectItem(NewIndex);
     end;
   end;
   FSearchText := '';
@@ -3452,16 +3479,22 @@ begin
   begin
     if FAllowSearch and (Msg.HotKey = 0) then
       if Assigned(LForm.ActiveControl) then
+        { ActiveControl must be Self or childs of Self ! }
         if (WinInWin(LForm.ActiveControl.Handle, Handle)) then
         begin
-          { ActiveControl must be Self or childs of Self ! }
-          if DoSelectCaret(FSelectedIndex) then
-            Exit;
+          if GetCaretWin = Handle then // searching
+          begin
+            FSearchText := '';
+            UpdateEditControl; // move back to Edit
+          end
+          else
+            if DoSelectCaret(FSelectedIndex) then // start search
+              Exit;
         end;
     { Translate the Tab to the parent to
       select controls that have TabStop !
     }
-    LForm.Perform(CM_DialogKey, VK_TAB, 0);
+    //LForm.Perform(CM_DialogKey, VK_TAB, 0); // I think we don't need to process Tab like delphi IDE...
   end;
 end;
 
