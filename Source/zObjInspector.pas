@@ -2574,15 +2574,15 @@ begin
   if Assigned(FOnItemSetValue) then
     Result := FOnItemSetValue(Self, PropItem, Value);
   if Result then
-    DefaultValueManager.SetValue(PropItem, Value);
-  if Result then
   begin
+    DefaultValueManager.SetValue(PropItem, Value);
+
     if PropItem.IsClass then
       { Must rebuild the list . }
       UpdateProperties();
-    FPropInspEdit.UpdateEditText;
-    Invalidate;
   end;
+  FPropInspEdit.UpdateEditText; // required on Result is True or False
+  Invalidate;
 end;
 
 procedure TzCustomObjInspector.ExpandAll;
