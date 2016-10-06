@@ -139,7 +139,7 @@ begin
   for i := 0 to L - 1 do
   begin
     PRec := FList.Items[i];
-    Finalize(PRec);
+    FreeRecord(PRec);
   end;
   FList.Clear;
   FCount := 0;
@@ -191,16 +191,16 @@ end;
 
 procedure TzRecordList<T, P>.SortOrgList(Compare: TListSortCompare);
 begin
-FList.Sort(Compare);
+  FList.Sort(Compare);
 end;
 
 procedure TzRecordList<T, P>.FreeRecord(PRec: Pointer);
 begin
   if Assigned(PRec) then
   begin
+    ZeroMemory(PRec, SizeOf(T));
     Finalize(PT(PRec)^);
     FreeMem(PRec, SizeOf(T));
-    ZeroMemory(PRec, SizeOf(T));
     PT(PRec) := nil;
   end;
 end;
