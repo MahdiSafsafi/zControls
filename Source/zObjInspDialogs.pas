@@ -31,9 +31,10 @@ type
   TzInspDialog = class(TForm)
   private
     FPropItem: PPropItem;
-    property PropItem: PPropItem read FPropItem write FPropItem;
   protected
     procedure DoCreate; override;
+  public
+    property PropItem: PPropItem read FPropItem write FPropItem;
   end;
 
 implementation

@@ -112,7 +112,7 @@ type
     function GetCount: Integer;
     function GetItem(const Index: Integer): PPropItem;
     function GetHasChild: Boolean;
-    function GetDynInstance: TObject;
+    // function GetDynInstance: TObject;
     function GetExpanded: Boolean;
     function GetValue: TValue;
     function GetName: String;
@@ -287,7 +287,7 @@ type
     procedure ButtonClick(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure PropInfoChanged;
   public
-    constructor Create(AOwner: TComponent; Inspector: TzCustomObjInspector); overload;
+    constructor Create(AOwner: TComponent; Inspector: TzCustomObjInspector); reintroduce;
     { Do not publish any property ! }
     property PropInfo: PPropItem read FPropItem write SetPropItem;
     property AlignWithMargins;
@@ -829,7 +829,6 @@ begin
     Result := Prop.Visibility >= ObjectVisibility;
 end;
 
-
 function ObjHasAtLeastOneChild(Obj: TObject; ObjVisibility: TMemberVisibility): Boolean;
 var
   LCtx: TRttiContext;
@@ -966,9 +965,7 @@ begin
           Inc(Result)
         else if P.CategoryIndex > -1 then
           Break;
-      end
-      else
-      begin
+      end else begin
         if P.Parent = @Self then
           Inc(Result);
         if Parent = P.Parent then
@@ -999,8 +996,8 @@ begin
     Result := ObjHasAtLeastOneChild(Value.AsObject, TzObjInspectorBase(Insp).ObjectVisibility);
 end;
 
-function TPropItem.GetDynInstance: TObject;
-var
+{ function TPropItem.GetDynInstance: TObject;
+  var
   // LInsp: TzObjInspectorBase;
   LCtx: TRttiContext;
   LType: TRttiType;
@@ -1011,17 +1008,17 @@ var
   i: Integer;
   procedure GetParents;
   var
-    P: PPropItem;
+  P: PPropItem;
   begin
-    P := Parent;
-    while Assigned(P) do
-    begin
-      LList.Add(P);
-      P := P.Parent;
-    end;
+  P := Parent;
+  while Assigned(P) do
+  begin
+  LList.Add(P);
+  P := P.Parent;
+  end;
   end;
 
-begin
+  begin
   CheckItemsList;
   // LInsp := TzObjInspectorBase(Insp);
   LObj := Component;
@@ -1031,24 +1028,25 @@ begin
   Result := LObj;
   for i := LList.Count - 1 downto 0 do
   begin
-    if not Assigned(LObj) then
-    begin
-      LList.Free;
-      Exit(nil);
-    end;
-    LType := LCtx.GetType(LObj.ClassInfo);
-    LProp := LType.GetProperty(PPropItem(LList.Items[i]).Name);
-    LValue := LProp.GetValue(LObj);
-    if LValue.IsObject then
-      LObj := LValue.AsObject;
-    if LProp = Parent.Prop then
-    begin
-      Result := LObj;
-      Break;
-    end;
+  if not Assigned(LObj) then
+  begin
+  LList.Free;
+  Exit(nil);
+  end;
+  LType := LCtx.GetType(LObj.ClassInfo);
+  LProp := LType.GetProperty(PPropItem(LList.Items[i]).Name);
+  LValue := LProp.GetValue(LObj);
+  if LValue.IsObject then
+  LObj := LValue.AsObject;
+  if LProp = Parent.Prop then
+  begin
+  Result := LObj;
+  Break;
+  end;
   end;
   LList.Free;
-end;
+  end;
+}
 
 function TPropItem.GetItem(const Index: Integer): PPropItem;
 var
@@ -1533,9 +1531,7 @@ var
             L := FCategory.Add(LCategoryName);
             PCategory := AddNewCategory;
           end;
-        end
-        else
-        begin
+        end else begin
           if FSortByCategory and (AInstance = LComponent) then
           begin
             if FPropsCategory.ContainsKey(LProp.Name) then
@@ -1543,9 +1539,7 @@ var
               L := FPropsCategory[LProp.Name];
               LCategoryName := FCategory[L];
               LQName := LCategoryName + '.' + LQName;
-            end
-            else
-            begin
+            end else begin
               LCategoryName := FDefaultCategoryName;
               L := 0;
               LQName := LCategoryName + '.' + LQName;
@@ -1659,7 +1653,6 @@ var
   var
     P: PPropItem;
   begin
-    Result := False;
     P := AItem.Parent;
     while Assigned(P) do
     begin
@@ -1898,8 +1891,8 @@ begin
   StyleServices.DrawElement(Canvas.Handle, LDetails, HeaderPropRect);
   R := HeaderPropRect;
   Inc(R.Left, 10);
-  StyleServices.DrawText(Canvas.Handle, LDetails, FHeaderPropText, R, DT_LEFT or DT_SINGLELINE or DT_VCENTER, 0);
-
+  // StyleServices.DrawText(Canvas.Handle, LDetails, FHeaderPropText, R, DT_LEFT or DT_SINGLELINE or DT_VCENTER, 0);
+  StyleServices.DrawText(Canvas.Handle, LDetails, FHeaderPropText, R, [tfLeft, tfSingleLine, tfVerticalCenter]);
   if FHeaderValuePressed then
     LDetails := StyleServices.GetElementDetails(thHeaderItemPressed)
   else
@@ -1908,7 +1901,8 @@ begin
   StyleServices.DrawElement(Canvas.Handle, LDetails, HeaderValueRect);
   R := HeaderValueRect;
   Inc(R.Left, 10);
-  StyleServices.DrawText(Canvas.Handle, LDetails, FHeaderValueText, R, DT_LEFT or DT_SINGLELINE or DT_VCENTER, 0);
+  // StyleServices.DrawText(Canvas.Handle, LDetails, FHeaderValueText, R, DT_LEFT or DT_SINGLELINE or DT_VCENTER, 0);
+  StyleServices.DrawText(Canvas.Handle, LDetails, FHeaderValueText, R, [tfLeft, tfSingleLine, tfVerticalCenter]);
 
   CanvasStack.Pop;
 end;
@@ -2190,9 +2184,7 @@ var
         hrgnUpdate := CreateRectRgn(Left, Top, Right, Bottom);
       ScrollWindowEx(Handle, XAmount, YAmount, nil, @LScrollArea, hrgnUpdate, nil, ScrollFlags);
       DeleteObject(hrgnUpdate);
-    end
-    else
-    begin
+    end else begin
       ScrollWindow(Handle, XAmount, YAmount, nil, nil);
       { Update the non validated area . }
       UpdateWindow(Handle);
@@ -2221,8 +2213,8 @@ begin
     SB_BOTTOM: FSI.nPos := FSI.nMax;
     SB_LINEUP: FSI.nPos := FSI.nPos - 1;
     SB_LINEDOWN: FSI.nPos := FSI.nPos + 1;
-    SB_PAGEUP: FSI.nPos := FSI.nPos - FSI.nPage;
-    SB_PAGEDOWN: FSI.nPos := FSI.nPos + FSI.nPage;
+    SB_PAGEUP: FSI.nPos := FSI.nPos - Integer(FSI.nPage);
+    SB_PAGEDOWN: FSI.nPos := FSI.nPos + Integer(FSI.nPage);
     SB_THUMBTRACK: FSI.nPos := FSI.nTrackPos;
     SB_THUMBPOSITION: { VCL Style Support ! }
       begin
@@ -2837,9 +2829,7 @@ begin
         Hint := PItem.ValueName;
         w := Canvas.TextWidth(Hint);
         MustShow := R.Width <= w;
-      end
-      else
-      begin
+      end else begin
         R := PropTextRect[Index];
         Hint := PItem.Name;
         FBoldHint := IsValueNoDefault(PItem.QualifiedName, PItem.ValueName);
@@ -2960,9 +2950,7 @@ begin
   begin
     // Canvas.Refresh;
     // PaintCategory(Index);
-  end
-  else
-  begin
+  end else begin
     // Canvas.Refresh;
 
     if CanDrawChevron(Index) then
@@ -3597,9 +3585,7 @@ begin
       FList.Selected[Index] := True;
       DoSetValueFromList;
       Exit;
-    end
-    else
-    begin
+    end else begin
       if not DefaultValueManager.ValueHasOpenProbabilities(FPropItem) then
       begin
         raise InvalidPropValueError.CreateRes(@SInvalidPropValueErr);
@@ -3612,9 +3598,7 @@ begin
   begin
     vSInt := DefaultValueManager.StrToValue<Int64>(FPropItem, s);
     Value := DefaultValueManager.GetValue(FPropItem, vSInt);
-  end
-  else
-  begin
+  end else begin
     vUInt := DefaultValueManager.StrToValue<UInt64>(FPropItem, s);
     Value := DefaultValueManager.GetValue(FPropItem, vUInt);
   end;
@@ -4149,9 +4133,7 @@ begin
     else
       Exclude(s, PItem.SetElementValue);
     TValueData(Val).FAsSLong := Integer(s);
-  end
-  else
-  begin
+  end else begin
     if IsValueSigned(Val) then
       TValueData(Val).FAsSInt64 := Int64(Value)
     else
@@ -4182,9 +4164,7 @@ begin
   begin
     sValue := (TValueData(Value).FAsSInt64);
     Result := sR;
-  end
-  else
-  begin
+  end else begin
     uValue := (TValueData(Value).FAsUInt64);
     Result := uR;
   end;

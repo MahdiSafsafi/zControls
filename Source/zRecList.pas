@@ -139,7 +139,7 @@ begin
   for i := 0 to L - 1 do
   begin
     PRec := FList.Items[i];
-    FreeRecord(PRec);
+    Finalize(PRec);
   end;
   FList.Clear;
   FCount := 0;
