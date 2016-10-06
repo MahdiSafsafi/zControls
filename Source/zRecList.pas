@@ -198,7 +198,6 @@ procedure TzRecordList<T, P>.FreeRecord(PRec: Pointer);
 begin
   if Assigned(PRec) then
   begin
-    ZeroMemory(PRec, SizeOf(T));
     Finalize(PT(PRec)^);
     FreeMem(PRec, SizeOf(T));
     PT(PRec) := nil;
