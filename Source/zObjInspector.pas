@@ -713,7 +713,7 @@ resourcestring
 const
 
   PlusMinWidth = 10;
-  ColorWidth = 16;
+  ColorWidth = 13;
 
 type
   InspException = class(Exception);
@@ -4369,6 +4369,9 @@ begin
   begin
     C := GetValueAs<TColor>(Value);
     ExtRect := LInspector.ExtraRect[Index];
+    { Delphi Berlin color style }
+    if LInspector.FSelectedIndex = Index then
+      InflateRect(ExtRect, -1, -1);
     zFillRect(DC, ExtRect, ColorToRGB(C), clBlack, 1, 1);
   end;
 
