@@ -4472,6 +4472,7 @@ var
   P: TPoint;
   DC: HDC;
   R: TRect;
+  OldFontStyles: TFontStyles;
 begin
   R := ClientRect;
 
@@ -4491,7 +4492,13 @@ begin
   if FDropDown then
     DrawArrow(Canvas, sdDown, P, 3)
   else
-    LStyle.DrawText(DC, LDetails, '...', R, [tfCenter, tfSingleLine]);
+  begin
+    OldFontStyles := Canvas.Font.Style;
+    if LStyle.IsSystemStyle then
+      Canvas.Font.Style := [fsBold];
+    LStyle.DrawText(DC, LDetails, '...', R, [tfCenter,tfVerticalCenter, tfSingleLine]);
+    Canvas.Font.Style := OldFontStyles;
+  end;
 end;
 
 procedure TzPropInspButton.WMLButtonDown(var Message: TWMLButtonDown);
