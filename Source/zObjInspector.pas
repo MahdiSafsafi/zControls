@@ -3627,7 +3627,7 @@ begin
     if Assigned(FInspector.FOnGetItemReadOnly) then
       ReadOnly := FInspector.FOnGetItemReadOnly(FInspector, FPropItem);
 
-  if ReadOnly then
+  if ReadOnly and (not FPropItem.IsSet) then
     Font.Color := FInspector.FReadOnlyColor
   else
     Font.Color := GetSysColor(clWindowText);
