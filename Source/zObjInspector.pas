@@ -3599,15 +3599,15 @@ begin
     ReadOnly := True
   else
   begin
-    ReadOnly := not FPropItem.Prop.IsWritable;
-    if FPropItem.IsSet then
+    ReadOnly := not FPropItem^.Prop.IsWritable;
+    if (FPropItem^.IsSet) or (FPropItem^.IsClass) then
       ReadOnly := True;
   end;
   if not ReadOnly then
     if Assigned(FInspector.FOnGetItemReadOnly) then
       ReadOnly := FInspector.FOnGetItemReadOnly(FInspector, FPropItem);
 
-  if ReadOnly and (not FPropItem.IsSet) then
+  if ReadOnly and (not(FPropItem^.IsSet or FPropItem^.IsClass)) then
     Font.Color := FInspector.FReadOnlyColor
   else
     Font.Color := GetSysColor(clWindowText);
@@ -3651,7 +3651,7 @@ var
   mr: Integer;
   Value: TValue;
 begin
-  if ReadOnly then
+  if not FPropItem^.Prop.IsWritable then
     Exit;
   DialogClass := nil;
   with DefaultValueManager do
@@ -3688,11 +3688,9 @@ end;
 procedure TzPropInspEdit.UpdateButton;
 begin
   FButton.Visible := False;
-  if ReadOnly then
+  if not FPropItem^.Prop.IsWritable then
     Exit;
   if not DefaultValueManager.HasButton(PropInfo) then
-    Exit;
-  if not FPropItem.Prop.IsWritable then
     Exit;
   FButton.Parent := Self.Parent;
   FButton.Left := Self.Parent.ClientWidth - 17;
@@ -3709,7 +3707,7 @@ begin
   LQName := FPropItem.FQName;
   with FInspector do
   begin
-    Self.Text := FPropItem.ValueName;
+    Self.Text := FPropItem^.ValueName;
     if not FDefPropValue.ContainsKey(LQName) then
       FDefPropValue.Add(LQName, Self.Text);
     SelectAll;
@@ -3724,8 +3722,6 @@ var
 begin
   if Assigned(FList) then
     FreeAndNil(FList);
-  if ReadOnly then
-    Exit;
   if not FPropItem.Prop.IsWritable then
     Exit;
   if not DefaultValueManager.HasList(FPropItem) then
@@ -4529,7 +4525,7 @@ var
   Prop: TRttiProperty; L: Integer;
   function Contains(PropArray: TArray<TRttiProperty>; AProp: TRttiProperty): Boolean;
   var
-   LProp: TRttiProperty;
+    LProp: TRttiProperty;
   begin
     Result := False;
     for LProp in PropArray do
@@ -4600,7 +4596,7 @@ end;
 
 procedure TzObjectHost.AddObject(Obj: TObject; Name: String);
 var
- P: TPairObjectName;
+  P: TPairObjectName;
 begin
   P.Key := Obj;
   P.Value := Name;
