@@ -6,41 +6,41 @@ zControls is a collection of Delphi components,actually it contains only one com
 
 * Same look and feel as Delphi IDE.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/0.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/0.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/0.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/0.PNG)
 
 * VCL Style support.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/1.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/1.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/1.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/1.PNG)
 
 * Multi objects editing.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/2.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/2.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/2.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/2.PNG)
 
 * Quick Find for properties : Just press TAB and start typing your property name.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/3.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/3.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/3.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/3.PNG)
 
 * Header/GridLine style.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/4.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/4.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/4.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/4.PNG)
 
 * Support most basic properties : Color,Cursors...
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/5.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/5.PNG)
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/6.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/6.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/5.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/5.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/6.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/6.PNG)
 
 * Support Items,Font,Color,Icon dialogs.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/7.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/7.PNG)
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/8.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/8.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/7.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/7.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/8.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/8.PNG)
 
 * Auto complete user input.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/9.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/9.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/9.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/9.PNG)
 
 * Events supports.
 
-![https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/10.PNG](https://dl.dropboxusercontent.com/u/99625333/Images/Delphi/zControls/ObjectInspector/10.PNG)
+![https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/10.PNG](https://github.com/MahdiSafsafi/zcontrols/blob/master/Screenshots/10.PNG)
 
 * Regrouping properties by category .
 * Fully customized : you can easy register your own property !.
