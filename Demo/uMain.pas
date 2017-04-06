@@ -69,7 +69,6 @@ begin
       Host.AddObject(Controls[i], Controls[i].Name);
 
   zObjectInspector1.Component := Host;
-
 end;
 
 procedure TMain.CheckBox2Click(Sender: TObject);
