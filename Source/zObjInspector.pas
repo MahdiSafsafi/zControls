@@ -434,6 +434,8 @@ type
       write SetObjectVisibility default mvPublic;
     property FloatPreference: TzFloatPreference read GetFloatPreference
       write SetFloatPreference;
+    property OnAutoExpandItemOnInit: TPropItemEvent read FOnAutoExpandItemOnInit
+      write FOnAutoExpandItemOnInit;
   end;
 
   TzObjInspectorList = class(TzObjInspectorBase)
