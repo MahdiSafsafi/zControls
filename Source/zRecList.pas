@@ -10,7 +10,7 @@
 // The Original Code is zRecList.pas.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2017 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
@@ -191,7 +191,7 @@ end;
 
 procedure TzRecordList<T, P>.SortOrgList(Compare: TListSortCompare);
 begin
-FList.Sort(Compare);
+  FList.Sort(Compare);
 end;
 
 procedure TzRecordList<T, P>.FreeRecord(PRec: Pointer);
@@ -200,7 +200,6 @@ begin
   begin
     Finalize(PT(PRec)^);
     FreeMem(PRec, SizeOf(T));
-    ZeroMemory(PRec, SizeOf(T));
     PT(PRec) := nil;
   end;
 end;

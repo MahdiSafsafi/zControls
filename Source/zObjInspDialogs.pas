@@ -10,7 +10,7 @@
 // The Original Code is zObjInspDialogs.pas.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2017 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
@@ -31,9 +31,10 @@ type
   TzInspDialog = class(TForm)
   private
     FPropItem: PPropItem;
-    property PropItem: PPropItem read FPropItem write FPropItem;
   protected
     procedure DoCreate; override;
+  public
+    property PropItem: PPropItem read FPropItem write FPropItem;
   end;
 
 implementation

@@ -10,7 +10,7 @@
 // The Original Code is zUtils.pas.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2017 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
@@ -59,15 +59,16 @@ var
   KeyboardState: TKeyboardState;
   P: PChar;
 begin
-  Win32Check(GetKeyboardState(KeyboardState));
-  GetMem(P, 4);
-  ZeroMemory(P, 4);
-  SetLength(Result, 2);
-  if ToAscii(vKey, MapVirtualKey(vKey, 0), KeyboardState, P, 0) > 0 then
-    Result := StrPas(P)
-  else
-    Result := '';
-  FreeMem(P, 4);
+  Result := '';
+  if GetKeyboardState(KeyboardState) then
+  begin
+    GetMem(P, 4);
+    ZeroMemory(P, 4);
+    SetLength(Result, 2);
+    if ToAscii(vKey, MapVirtualKey(vKey, 0), KeyboardState, P, 0) > 0 then
+      Result := StrPas(P);
+    FreeMem(P, 4);
+  end;
 end;
 
 procedure DrawHorzDotLine(Canvas: TCanvas; X, Y, Width: Integer);
@@ -184,9 +185,7 @@ begin
     else
       Details := LStyle.GetElementDetails(tcbCategoryGlyphOpened);
     LStyle.DrawElement(Canvas.Handle, Details, Rect(X, Y, X + Width, Y + Width));
-  end
-  else
-  begin
+  end else begin
     Canvas.Pen.Color := clBtnShadow;
     Canvas.Brush.Color := clWindow;
     Canvas.Rectangle(X, Y, X + Width, Y + Height);
@@ -202,6 +201,5 @@ begin
     end;
   end;
 end;
-
 
 end.
