@@ -48,6 +48,7 @@ uses
   zCanvasStack,
   zRecList,
   zUtils,
+  FloatConv,
   Generics.Collections,
   Generics.Defaults,
   RTTI,
@@ -160,7 +161,24 @@ type
     function GetUsedProperties: TArray<TRttiProperty>;
   end;
 
+  TzFloatPreference = class(TPersistent)
+  private
+    FExpPrecision: Integer;
+    FMaxDigits: Integer;
+    FFormatOptions: TFloatFormatOptions;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property MaxDigits: Integer read FMaxDigits write FMaxDigits;
+    property ExpPrecision: Integer read FExpPrecision write FExpPrecision;
+    property FormatOptions: TFloatFormatOptions read FFormatOptions write FFormatOptions;
+  end;
+
   TzCustomValueManager = class
+  private
+    class var FloatPreference: TzFloatPreference;
+    class constructor Create;
+    class destructor Destroy;
   protected
     /// <summary> Use custom ListBox .
     /// </summary>
@@ -357,6 +375,8 @@ type
     function GetItemOrder(PItem: PPropItem): Integer;
     procedure SetSortByCategory(const Value: Boolean);
     procedure SetObjectVisibility(const Value: TMemberVisibility);
+    function GetFloatPreference: TzFloatPreference;
+    procedure SetFloatPreference(const Value: TzFloatPreference);
   protected
     procedure UpdateVisibleItems;
     procedure UpdateItems;
@@ -387,6 +407,7 @@ type
     property OnAutoExpandItemOnInit: TPropItemEvent read FOnAutoExpandItemOnInit write FOnAutoExpandItemOnInit;
     // visibility of plain object (not descendant of TPersistent)
     property ObjectVisibility: TMemberVisibility read FObjectVisibility write SetObjectVisibility default mvPublic;
+    property FloatPreference: TzFloatPreference read GetFloatPreference write SetFloatPreference;
   end;
 
   TzObjInspectorList = class(TzObjInspectorBase)
@@ -672,6 +693,7 @@ type
     property HeaderPropText;
     property HeaderValueText;
     property ObjectVisibility;
+    property FloatPreference;
     property OnClick;
     property OnContextPopup;
     property OnDragDrop;
@@ -721,7 +743,11 @@ resourcestring
 const
   PlusMinWidth = 10;
   ColorWidth = 16;
-  cFloatDigits = 4; // # of digits to format float to string. (see help of SysUtils.TFloatFormat)
+
+const
+  cDefaultMaxDigits = 2;
+  cDefaultExpPrecision = 6;
+  cDefaultFormatOptions: TFloatFormatOptions = [];
 
 type
   InspException = class(Exception);
@@ -1709,6 +1735,17 @@ begin
 
   end;
 
+end;
+
+function TzObjInspectorBase.GetFloatPreference: TzFloatPreference;
+begin
+  Result := TzCustomValueManager.FloatPreference;
+end;
+
+procedure TzObjInspectorBase.SetFloatPreference(const Value: TzFloatPreference);
+begin
+  TzCustomValueManager.FloatPreference := Value;
+  UpdateProperties;
 end;
 
 { TzObjInspectorList }
@@ -3996,6 +4033,23 @@ end;
 
 { TzCustomValueManager }
 
+class constructor TzCustomValueManager.Create;
+begin
+  TzCustomValueManager.FloatPreference := TzFloatPreference.Create;
+
+  with TzCustomValueManager.FloatPreference do
+  begin
+    ExpPrecision  := cDefaultExpPrecision;
+    MaxDigits     := cDefaultMaxDigits;
+    FormatOptions := cDefaultFormatOptions;
+  end;
+end;
+
+class destructor TzCustomValueManager.Destroy;
+begin
+  TzCustomValueManager.FloatPreference.Free;
+end;
+
 class procedure TzCustomValueManager.DialogCode(const PItem: PPropItem; Dialog: TComponent; Code: Integer);
 begin
 
@@ -4310,17 +4364,20 @@ begin
   end
   else if PItem.Value.TypeInfo = TypeInfo(Single) then
   begin
-    Result := FloatToStrF(TValueData(Value).FAsSingle, ffGeneral, 7, cFloatDigits);
+    with TzCustomValueManager.FloatPreference do
+      Result := MyFormatFloat(TValueData(Value).FAsSingle, MaxDigits, ExpPrecision, FormatOptions);
     Exit;
   end
   else if PItem.Value.TypeInfo = TypeInfo(Double) then
   begin
-    Result := FloatToStrF(TValueData(Value).FAsDouble, ffGeneral, 15, cFloatDigits);
+    with TzCustomValueManager.FloatPreference do
+      Result := MyFormatFloat(TValueData(Value).FAsDouble, MaxDigits, ExpPrecision, FormatOptions);
     Exit;
   end
   else if PItem.Value.TypeInfo = TypeInfo(Extended) then
   begin
-    Result := FloatToStrF(Value.AsExtended, ffGeneral, 18, cFloatDigits);
+    with TzCustomValueManager.FloatPreference do
+      Result := MyFormatFloat(Value.AsExtended, MaxDigits, ExpPrecision, FormatOptions);
     Exit;
   end;
 
@@ -4541,19 +4598,19 @@ begin
       end;
     vtSingle:
       begin
-        TryStrToFloat(s, vSingle);
+        MyTryStrToFloat(s, vSingle);
         Result := fsR;
         Exit;
       end;
     vtDouble:
       begin
-        TryStrToFloat(s, vDouble);
+        MyTryStrToFloat(s, vDouble);
         Result := fdR;
         Exit;
       end;
     vtExtended:
       begin
-        TryStrToFloat(s, vExtended);
+        MyTryStrToFloat(s, vExtended);
         Result := feR;
         Exit;
       end;
@@ -4785,6 +4842,20 @@ begin
     FObjectVisibility := Value
   else
     raise InspException.Create('Object Visibility must be mvPublic or mvPublished.');
+end;
+
+{ TzFloatPreference }
+
+procedure TzFloatPreference.Assign(Source: TPersistent);
+begin
+  if Source is TzFloatPreference then
+  begin
+    MaxDigits := TzFloatPreference(Source).MaxDigits;
+    ExpPrecision := TzFloatPreference(Source).ExpPrecision;
+    FormatOptions := TzFloatPreference(Source).FormatOptions;
+  end
+  else
+    inherited Assign(Source);
 end;
 
 end.
