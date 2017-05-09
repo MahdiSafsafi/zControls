@@ -96,7 +96,6 @@
         <DCCReference Include="..\Source\zControlsReg.pas"/>
         <DCCReference Include="..\Source\zGraphicDialog.pas">
             <Form>GraphicDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Source\zObjInspDialogs.pas"/>
         <DCCReference Include="..\Source\zObjInspector.pas"/>
@@ -104,8 +103,11 @@
         <DCCReference Include="..\Source\zRecList.pas"/>
         <DCCReference Include="..\Source\zStringsDialog.pas">
             <Form>StringsDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\Source\FloatConv.pas"/>
+        <DCCReference Include="..\Source\FloatConv.Single.pas"/>
+        <DCCReference Include="..\Source\FloatConv.Double.pas"/>
+        <DCCReference Include="..\Source\FloatConv.Extended.pas"/>
         <DCCReference Include="..\Source\zUtils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
