@@ -95,11 +95,11 @@
             <Form>StringsDialog</Form>
         </DCCReference>
         <DCCReference Include="..\Source\zUtils.pas"/>
-        <DCCReference Include="..\Source\FloatConv.pas"/>
-        <DCCReference Include="..\Source\FloatConv.Double.pas"/>
-        <DCCReference Include="..\Source\FloatConv.Extended.pas"/>
-        <DCCReference Include="..\Source\FloatConv.Single.pas"/>
-        <None Include="..\Source\FloatConv_impl.inc"/>
+        <DCCReference Include="..\Source\FloatConv\FloatConv.pas"/>
+        <DCCReference Include="..\Source\FloatConv\FloatConv.Double.pas"/>
+        <DCCReference Include="..\Source\FloatConv\FloatConv.Extended.pas"/>
+        <DCCReference Include="..\Source\FloatConv\FloatConv.Single.pas"/>
+        <None Include="..\Source\FloatConv\FloatConv_impl.inc"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
