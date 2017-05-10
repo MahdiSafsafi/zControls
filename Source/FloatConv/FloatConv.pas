@@ -17,7 +17,7 @@
 
 // **************************************************************************************************
 // authors page:  https://github.com/benok/zcontrols
-// (contributed for https://github.com/MahdiSafsafi/zcontrols)
+// (contributed to https://github.com/MahdiSafsafi/zcontrols)
 // **************************************************************************************************
 
 unit FloatConv;
