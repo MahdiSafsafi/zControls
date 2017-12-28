@@ -1297,10 +1297,10 @@ begin
     i := Pos('.', s, i + 1);
   end;
   Dec(Result);
-  if FSortByCategory then
-    Dec(Result);
-  if PItem^.CategoryIndex > -1 then
-    Result := 0;
+//  if FSortByCategory then
+//    Dec(Result);
+//  if FSortByCategory and (PItem^.CategoryIndex <= -1) then
+//    Result := 0;
 end;
 
 procedure TzObjInspectorBase.Invalidate;
