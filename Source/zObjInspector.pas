@@ -3050,6 +3050,9 @@ begin
       // cY:=R.Top;
       if HasPlusMinus then
         Dec(X, PlusMinWidth + 2);
+      Canvas.Pen.Color := clWindowText;
+      if UseStyleColor then
+        Canvas.Pen.Color := StyleServices.GetSystemColor(clWindowText);
       DrawChevron(Canvas, sdRight, Point(X, cY), 3);
     end;
 
@@ -4673,6 +4676,7 @@ var
   DC: HDC;
   R: TRect;
   OldFontStyles: TFontStyles;
+  OldPenColor : TColor;
 begin
   R := ClientRect;
 
@@ -4688,10 +4692,14 @@ begin
     LStyle.DrawParentBackground(Handle, DC, nil, False);
 
   LStyle.DrawElement(DC, LDetails, ClientRect);
+
+  if FDropDown then begin
   P := Point((Width div 2) - 2, (Height div 2) - 2);
-  if FDropDown then
-    DrawArrow(Canvas, sdDown, P, 3)
-  else
+    OldPenColor := Canvas.Pen.Color;
+    Canvas.Pen.Color := LStyle.GetSystemColor(clWindowText);
+    DrawArrow(Canvas, sdDown, P, PropInspBtnArrowSize);
+    Canvas.Pen.Color := OldPenColor;
+  end else
   begin
     OldFontStyles := Canvas.Font.Style;
     if LStyle.IsSystemStyle then
