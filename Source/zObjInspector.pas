@@ -655,6 +655,7 @@ type
     property AllowSearch: Boolean read FAllowSearch write SetAllowSearch;
   end;
 
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
   TzObjectInspector = class(TzCustomObjInspector)
   strict private
     class constructor Create;
@@ -952,11 +953,13 @@ begin
         Exit(i);
 end;
 
-procedure TPropList.Sort;
+//  Cannot be a local procedure in win64
   function Compare(Item1, Item2: Pointer): Integer;
   begin
     Result := CompareText(PPropItem(Item1)^.FQName, PPropItem(Item2)^.FQName);
   end;
+
+procedure TPropList.Sort;
 
 begin
   SortOrgList(@Compare);
