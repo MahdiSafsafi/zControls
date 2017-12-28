@@ -155,6 +155,7 @@ type
   end;
 
   TPropItemEvent = function(Sender: TControl; PItem: PPropItem): Boolean of object;
+  TGetItemFriendlyNameEvent = function(Sender: TControl; PItem: PPropItem): string of object;
   TSplitterPosChangedEvent = procedure(Sender: TControl; var Pos: Integer) of object;
   THeaderMouseDownEvent = procedure(Sender: TControl; Item: THeaderItem; X, Y: Integer) of object;
   TItemSetValue = function(Sender: TControl; PItem: PPropItem; var NewValue: TValue): Boolean of object;
@@ -547,6 +548,7 @@ type
     FOnItemSetValue: TItemSetValue;
     FOnExpandItem: TPropItemEvent;
     FOnCollapseItem: TPropItemEvent;
+    FOnGetItemFriendlyName : TGetItemFriendlyNameEvent;
     FPropsNeedHint: Boolean;
     FValuesNeedHint: Boolean;
     FPrevHintIndex: Integer;
@@ -650,6 +652,8 @@ type
     property OnGetItemReadOnly: TPropItemEvent read FOnGetItemReadOnly write FOnGetItemReadOnly;
     property OnItemSetValue: TItemSetValue read FOnItemSetValue write FOnItemSetValue;
     property OnCollapseItem: TPropItemEvent read FOnCollapseItem write FOnCollapseItem;
+    property OnGetItemFriendlyName : TGetItemFriendlyNameEvent
+      read FOnGetItemFriendlyName write FOnGetItemFriendlyName;
     property OnExpandItem: TPropItemEvent read FOnExpandItem write FOnExpandItem;
     property OnSelectItem: TPropItemEvent read FOnSelectItem write FOnSelectItem;
     property AllowSearch: Boolean read FAllowSearch write SetAllowSearch;
@@ -729,6 +733,7 @@ type
     property OnCollapseItem;
     property OnExpandItem;
     property OnSelectItem;
+    property OnGetItemFriendlyName;
   end;
 
 var
@@ -3048,6 +3053,9 @@ begin
       DrawChevron(Canvas, sdRight, Point(X, cY), 3);
     end;
 
+    if Assigned(OnGetItemFriendlyName) then
+      PropName := OnGetItemFriendlyName(Self, PItem)
+    else
     PropName := PItem.Name;
 
     X := pOrdPos + 4;
