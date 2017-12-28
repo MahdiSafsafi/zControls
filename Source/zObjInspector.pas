@@ -48,7 +48,9 @@ uses
   zCanvasStack,
   zRecList,
   zUtils,
+  {$IFDEF CUSTOMFLOATCONV}
   FloatConv,
+  {$ENDIF}
   Generics.Collections,
   Generics.Defaults,
   RTTI,
@@ -165,13 +167,17 @@ type
   private
     FExpPrecision: Integer;
     FMaxDigits: Integer;
+  {$IFDEF CUSTOMFLOATCONV}
     FFormatOptions: TFloatFormatOptions;
+  {$ENDIF}
   public
     procedure Assign(Source: TPersistent); override;
   published
     property MaxDigits: Integer read FMaxDigits write FMaxDigits;
     property ExpPrecision: Integer read FExpPrecision write FExpPrecision;
+  {$IFDEF CUSTOMFLOATCONV}
     property FormatOptions: TFloatFormatOptions read FFormatOptions write FFormatOptions;
+  {$ENDIF}
   end;
 
   TzCustomValueManager = class
@@ -747,7 +753,9 @@ const
 const
   cDefaultMaxDigits = 2;
   cDefaultExpPrecision = 6;
+  {$IFDEF CUSTOMFLOATCONV}
   cDefaultFormatOptions: TFloatFormatOptions = [];
+  {$ENDIF}
 
 type
   InspException = class(Exception);
@@ -4028,7 +4036,9 @@ begin
   begin
     ExpPrecision := cDefaultExpPrecision;
     MaxDigits := cDefaultMaxDigits;
+    {$IFDEF CUSTOMFLOATCONV}
     FormatOptions := cDefaultFormatOptions;
+    {$ENDIF}
   end;
 end;
 
@@ -4342,17 +4352,29 @@ begin
   end else if PItem.Value.TypeInfo = TypeInfo(Single) then
   begin
     with TzCustomValueManager.FloatPreference do
+      {$IFDEF CUSTOMFLOATCONV}
       Result := MyFormatFloat(TValueData(Value).FAsSingle, MaxDigits, ExpPrecision, FormatOptions);
+      {$ELSE}
+      Result := TValueData(Value).FAsSingle.ToString(ffGeneral, ExpPrecision, MaxDigits);
+      {$ENDIF}
     Exit;
   end else if PItem.Value.TypeInfo = TypeInfo(Double) then
   begin
     with TzCustomValueManager.FloatPreference do
+      {$IFDEF CUSTOMFLOATCONV}
       Result := MyFormatFloat(TValueData(Value).FAsDouble, MaxDigits, ExpPrecision, FormatOptions);
+      {$ELSE}
+      Result := TValueData(Value).FAsDouble.ToString(ffGeneral, ExpPrecision, MaxDigits);
+      {$ENDIF}
     Exit;
   end else if PItem.Value.TypeInfo = TypeInfo(Extended) then
   begin
     with TzCustomValueManager.FloatPreference do
+      {$IFDEF CUSTOMFLOATCONV}
       Result := MyFormatFloat(Value.AsExtended, MaxDigits, ExpPrecision, FormatOptions);
+      {$ELSE}
+      Result := Value.AsExtended.ToString(ffGeneral, ExpPrecision, MaxDigits);
+      {$ENDIF}
     Exit;
   end;
 
@@ -4573,19 +4595,31 @@ begin
       end;
     vtSingle:
       begin
+        {$IFDEF CUSTOMFLOATCONV}
         MyTryStrToFloat(s, vSingle);
+        {$ELSE}
+        TryStrToFloat(s, vSingle);
+        {$ENDIF}
         Result := fsR;
         Exit;
       end;
     vtDouble:
       begin
+        {$IFDEF CUSTOMFLOATCONV}
         MyTryStrToFloat(s, vDouble);
+        {$ELSE}
+        TryStrToFloat(s, vDouble);
+        {$ENDIF}
         Result := fdR;
         Exit;
       end;
     vtExtended:
       begin
+        {$IFDEF CUSTOMFLOATCONV}
         MyTryStrToFloat(s, vExtended);
+        {$ELSE}
+        TryStrToFloat(s, vExtended);
+        {$ENDIF}
         Result := feR;
         Exit;
       end;
@@ -4833,7 +4867,9 @@ begin
   begin
     MaxDigits := TzFloatPreference(Source).MaxDigits;
     ExpPrecision := TzFloatPreference(Source).ExpPrecision;
+    {$IFDEF CUSTOMFLOATCONV}
     FormatOptions := TzFloatPreference(Source).FormatOptions;
+    {$ENDIF}
   end
   else
     inherited Assign(Source);
