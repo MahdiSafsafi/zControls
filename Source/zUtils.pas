@@ -35,7 +35,7 @@ uses
   Vcl.Themes;
 
 function RectVCenter(var R: TRect; Bounds: TRect): TRect;
-procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean);
+procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean; Width: Integer = 9);
 procedure zFillRect(DC: HDC; R: TRect; Color: COLORREF); overload;
 procedure zFillRect(DC: HDC; R: TRect; Color, BorderColor: COLORREF; DX, DY: Integer); overload;
 procedure DrawHorzDotLine(Canvas: TCanvas; X, Y, Width: Integer);
@@ -167,13 +167,12 @@ begin
   Result := R;
 end;
 
-procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean);
+procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean; Width: Integer = 9);
 var
-  Width, Height: Integer;
+  Height: Integer;
   Details: TThemedElementDetails;
   LStyle: TCustomStyleServices;
 begin
-  Width := 9;
   Height := Width;
   Inc(X, 2);
   Inc(Y, 2);

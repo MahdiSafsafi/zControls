@@ -611,6 +611,7 @@ type
     procedure PaintItem(Index: Integer); override;
     procedure PaintCategory(Index: Integer); virtual;
     procedure PaintItemValue(PItem: PPropItem; Index: Integer); virtual;
+    procedure ChangeScale(M, D: Integer{$if CompilerVersion >= 31}; isDpiChange: Boolean{$endif}); override;
   public
     function SetPropValue(PropItem: PPropItem; var Value: TValue): Boolean;
     /// <summary> Update the Inspector .
@@ -752,9 +753,11 @@ resourcestring
   SOutOfRangeErr = 'Index out of range.';
   SSelNonVisibleItemErr = 'Could not select a non visible item.';
 
-const
-  PlusMinWidth = 10;
-  ColorWidth = 13;
+Var
+  PlusMinWidth: integer = 10;
+  ColorWidth: integer = 13;
+  PropInspBtnWidth: integer = 17;
+  PropInspBtnArrowSize: integer = 3;
 
 const
   cDefaultMaxDigits = 2;
@@ -2866,6 +2869,21 @@ begin
 
 end;
 
+procedure TzCustomObjInspector.ChangeScale(M, D: Integer{$if CompilerVersion >= 31}; isDpiChange: Boolean{$endif});
+begin
+  if (M <> D) then
+  begin
+    FGutterWidth := MulDiv(FGutterWidth, M, D);
+    FSplitterPos := MulDiv(fSplitterPos, M, D);
+    PlusMinWidth := MulDiv(PlusMinWidth, M, D);
+    ColorWidth := MulDiv(ColorWidth, M, D);
+    PropInspBtnWidth := MulDiv(PropInspBtnWidth, M, D);
+    PropInspBtnArrowSize := MulDiv(PropInspBtnArrowSize, M, D);
+    FSepTxtDis := MulDiv(FSepTxtDis, M, D);
+  end;
+  inherited ChangeScale(M, D{$if CompilerVersion >= 31}, isDpiChange{$endif});
+end;
+
 procedure TzCustomObjInspector.CMHintShow(var Message: TCMHintShow);
 begin
   if FIsItemHint and FShowItemHint then
@@ -3038,22 +3056,22 @@ begin
   pmR := PlusMinBtnRect[Index];
   if PItem^.HasChild and (not FCircularLinkProps.Contains(PItem^.FQName)) then
   begin
-    DrawPlusMinus(Canvas, pmR.Left, pmR.Top, not PItem.Expanded);
+    DrawPlusMinus(Canvas, pmR.Left, pmR.Top, not PItem.Expanded, pmR.Width);
     HasPlusMinus := True;
   end;
   if not PItem^.IsCategory then
   begin
     if CanDrawChevron(Index) then
     begin
-      cY := CenterPoint(pmR).Y - 3;
-      X := pOrdPos - (3 * 2) - 1; // pOrdPos - (>>)-1
+      cY := CenterPoint(pmR).Y - PropInspBtnArrowSize;
+      X := pOrdPos - (PropInspBtnArrowSize * 2) - 1; // pOrdPos - (>>)-1
       // cY:=R.Top;
       if HasPlusMinus then
         Dec(X, PlusMinWidth + 2);
       Canvas.Pen.Color := clWindowText;
       if UseStyleColor then
         Canvas.Pen.Color := StyleServices.GetSystemColor(clWindowText);
-      DrawChevron(Canvas, sdRight, Point(X, cY), 3);
+      DrawChevron(Canvas, sdRight, Point(X, cY), PropInspBtnArrowSize);
     end;
 
     if Assigned(OnGetItemFriendlyName) then
@@ -3427,13 +3445,13 @@ begin
     with ValueRect[FSelectedIndex] do
     begin
       if DefaultValueManager.HasButton(PItem) then
-        BtnWidth := 17
+        BtnWidth := PropInspBtnWidth // 17
       else
         BtnWidth := 0;
       FPropInspEdit.Left := LTxtValRect.Left;
       FPropInspEdit.Top := LTxtValRect.Top + 3;
 
-      FPropInspEdit.Width := Width - BtnWidth;
+      FPropInspEdit.Width := LTxtValRect.Width - BtnWidth;
       FPropInspEdit.Height := Height - 3;
     end;
     FPropInspEdit.Visible := True;
@@ -3757,13 +3775,14 @@ begin
   if FList.Items.Count = 0 then
     Exit;
   NewHeight := FList.ItemHeight * (FList.Items.Count) + 4;
-  P := Point(Left - DefaultValueManager.GetExtraRectWidth(PropInfo), Top + Height + 2);
+  //P := Point(Left - DefaultValueManager.GetExtraRectWidth(PropInfo), Top + Height + 2);
+  P := Point(FInspector.SplitterPos, Top + Height + 2);
   P := Parent.ClientToScreen(P);
   if (NewHeight + P.Y) >= Screen.Height then
     NewHeight := Screen.Height - P.Y - 50;
   FList.Height := NewHeight;
-  FList.Width := ClientWidth;
-
+  //FList.Width := ClientWidth + PropInspBtnWidth;
+  FList.Width := FInspector.ClientWidth - FInspector.SplitterPos;
   SetWindowPos(FList.Handle, HWND_TOP, P.X, P.Y, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
 end;
 
@@ -3818,10 +3837,10 @@ begin
   if not DefaultValueManager.HasButton(PropInfo) then
     Exit;
   FButton.Parent := Self.Parent;
-  FButton.Left := Self.Parent.ClientWidth - 17;
+  FButton.Left := Self.Parent.ClientWidth - PropInspBtnWidth;
   FButton.Top := Top - 3;
   FButton.Height := FInspector.FItemHeight; // 17;
-  FButton.Width := 17;
+  FButton.Width := PropInspBtnWidth;
   FButton.Visible := True;
 end;
 
@@ -4694,7 +4713,8 @@ begin
   LStyle.DrawElement(DC, LDetails, ClientRect);
 
   if FDropDown then begin
-  P := Point((Width div 2) - 2, (Height div 2) - 2);
+    P := Point((Width div 2) - PropInspBtnArrowSize,
+              (Height div 2) - PropInspBtnArrowSize div 2);
     OldPenColor := Canvas.Pen.Color;
     Canvas.Pen.Color := LStyle.GetSystemColor(clWindowText);
     DrawArrow(Canvas, sdDown, P, PropInspBtnArrowSize);
