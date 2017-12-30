@@ -48,7 +48,9 @@ uses
   zCanvasStack,
   zRecList,
   zUtils,
+  {$IFDEF CUSTOMFLOATCONV}
   FloatConv,
+  {$ENDIF}
   Generics.Collections,
   Generics.Defaults,
   RTTI,
@@ -153,6 +155,7 @@ type
   end;
 
   TPropItemEvent = function(Sender: TControl; PItem: PPropItem): Boolean of object;
+  TGetItemFriendlyNameEvent = function(Sender: TControl; PItem: PPropItem): string of object;
   TSplitterPosChangedEvent = procedure(Sender: TControl; var Pos: Integer) of object;
   THeaderMouseDownEvent = procedure(Sender: TControl; Item: THeaderItem; X, Y: Integer) of object;
   TItemSetValue = function(Sender: TControl; PItem: PPropItem; var NewValue: TValue): Boolean of object;
@@ -165,13 +168,17 @@ type
   private
     FExpPrecision: Integer;
     FMaxDigits: Integer;
+  {$IFDEF CUSTOMFLOATCONV}
     FFormatOptions: TFloatFormatOptions;
+  {$ENDIF}
   public
     procedure Assign(Source: TPersistent); override;
   published
     property MaxDigits: Integer read FMaxDigits write FMaxDigits;
     property ExpPrecision: Integer read FExpPrecision write FExpPrecision;
+  {$IFDEF CUSTOMFLOATCONV}
     property FormatOptions: TFloatFormatOptions read FFormatOptions write FFormatOptions;
+  {$ENDIF}
   end;
 
   TzCustomValueManager = class
@@ -541,6 +548,7 @@ type
     FOnItemSetValue: TItemSetValue;
     FOnExpandItem: TPropItemEvent;
     FOnCollapseItem: TPropItemEvent;
+    FOnGetItemFriendlyName : TGetItemFriendlyNameEvent;
     FPropsNeedHint: Boolean;
     FValuesNeedHint: Boolean;
     FPrevHintIndex: Integer;
@@ -603,6 +611,7 @@ type
     procedure PaintItem(Index: Integer); override;
     procedure PaintCategory(Index: Integer); virtual;
     procedure PaintItemValue(PItem: PPropItem; Index: Integer); virtual;
+    procedure ChangeScale(M, D: Integer{$if CompilerVersion >= 31}; isDpiChange: Boolean{$endif}); override;
   public
     function SetPropValue(PropItem: PPropItem; var Value: TValue): Boolean;
     /// <summary> Update the Inspector .
@@ -644,11 +653,14 @@ type
     property OnGetItemReadOnly: TPropItemEvent read FOnGetItemReadOnly write FOnGetItemReadOnly;
     property OnItemSetValue: TItemSetValue read FOnItemSetValue write FOnItemSetValue;
     property OnCollapseItem: TPropItemEvent read FOnCollapseItem write FOnCollapseItem;
+    property OnGetItemFriendlyName : TGetItemFriendlyNameEvent
+      read FOnGetItemFriendlyName write FOnGetItemFriendlyName;
     property OnExpandItem: TPropItemEvent read FOnExpandItem write FOnExpandItem;
     property OnSelectItem: TPropItemEvent read FOnSelectItem write FOnSelectItem;
     property AllowSearch: Boolean read FAllowSearch write SetAllowSearch;
   end;
 
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
   TzObjectInspector = class(TzCustomObjInspector)
   strict private
     class constructor Create;
@@ -722,6 +734,7 @@ type
     property OnCollapseItem;
     property OnExpandItem;
     property OnSelectItem;
+    property OnGetItemFriendlyName;
   end;
 
 var
@@ -740,14 +753,18 @@ resourcestring
   SOutOfRangeErr = 'Index out of range.';
   SSelNonVisibleItemErr = 'Could not select a non visible item.';
 
-const
-  PlusMinWidth = 10;
-  ColorWidth = 13;
+Var
+  PlusMinWidth: integer = 10;
+  ColorWidth: integer = 13;
+  PropInspBtnWidth: integer = 17;
+  PropInspBtnArrowSize: integer = 3;
 
 const
   cDefaultMaxDigits = 2;
   cDefaultExpPrecision = 6;
+  {$IFDEF CUSTOMFLOATCONV}
   cDefaultFormatOptions: TFloatFormatOptions = [];
+  {$ENDIF}
 
 type
   InspException = class(Exception);
@@ -944,11 +961,13 @@ begin
         Exit(i);
 end;
 
-procedure TPropList.Sort;
+//  Cannot be a local procedure in win64
   function Compare(Item1, Item2: Pointer): Integer;
   begin
     Result := CompareText(PPropItem(Item1)^.FQName, PPropItem(Item2)^.FQName);
   end;
+
+procedure TPropList.Sort;
 
 begin
   SortOrgList(@Compare);
@@ -1281,10 +1300,10 @@ begin
     i := Pos('.', s, i + 1);
   end;
   Dec(Result);
-  if FSortByCategory then
-    Dec(Result);
-  if PItem^.CategoryIndex > -1 then
-    Result := 0;
+//  if FSortByCategory then
+//    Dec(Result);
+//  if FSortByCategory and (PItem^.CategoryIndex <= -1) then
+//    Result := 0;
 end;
 
 procedure TzObjInspectorBase.Invalidate;
@@ -2850,6 +2869,21 @@ begin
 
 end;
 
+procedure TzCustomObjInspector.ChangeScale(M, D: Integer{$if CompilerVersion >= 31}; isDpiChange: Boolean{$endif});
+begin
+  if (M <> D) then
+  begin
+    FGutterWidth := MulDiv(FGutterWidth, M, D);
+    FSplitterPos := MulDiv(fSplitterPos, M, D);
+    PlusMinWidth := MulDiv(PlusMinWidth, M, D);
+    ColorWidth := MulDiv(ColorWidth, M, D);
+    PropInspBtnWidth := MulDiv(PropInspBtnWidth, M, D);
+    PropInspBtnArrowSize := MulDiv(PropInspBtnArrowSize, M, D);
+    FSepTxtDis := MulDiv(FSepTxtDis, M, D);
+  end;
+  inherited ChangeScale(M, D{$if CompilerVersion >= 31}, isDpiChange{$endif});
+end;
+
 procedure TzCustomObjInspector.CMHintShow(var Message: TCMHintShow);
 begin
   if FIsItemHint and FShowItemHint then
@@ -3022,21 +3056,27 @@ begin
   pmR := PlusMinBtnRect[Index];
   if PItem^.HasChild and (not FCircularLinkProps.Contains(PItem^.FQName)) then
   begin
-    DrawPlusMinus(Canvas, pmR.Left, pmR.Top, not PItem.Expanded);
+    DrawPlusMinus(Canvas, pmR.Left, pmR.Top, not PItem.Expanded, pmR.Width);
     HasPlusMinus := True;
   end;
   if not PItem^.IsCategory then
   begin
     if CanDrawChevron(Index) then
     begin
-      cY := CenterPoint(pmR).Y - 3;
-      X := pOrdPos - (3 * 2) - 1; // pOrdPos - (>>)-1
+      cY := CenterPoint(pmR).Y - PropInspBtnArrowSize;
+      X := pOrdPos - (PropInspBtnArrowSize * 2) - 1; // pOrdPos - (>>)-1
       // cY:=R.Top;
       if HasPlusMinus then
         Dec(X, PlusMinWidth + 2);
-      DrawChevron(Canvas, sdRight, Point(X, cY), 3);
+      Canvas.Pen.Color := clWindowText;
+      if UseStyleColor then
+        Canvas.Pen.Color := StyleServices.GetSystemColor(clWindowText);
+      DrawChevron(Canvas, sdRight, Point(X, cY), PropInspBtnArrowSize);
     end;
 
+    if Assigned(OnGetItemFriendlyName) then
+      PropName := OnGetItemFriendlyName(Self, PItem)
+    else
     PropName := PItem.Name;
 
     X := pOrdPos + 4;
@@ -3405,13 +3445,13 @@ begin
     with ValueRect[FSelectedIndex] do
     begin
       if DefaultValueManager.HasButton(PItem) then
-        BtnWidth := 17
+        BtnWidth := PropInspBtnWidth // 17
       else
         BtnWidth := 0;
       FPropInspEdit.Left := LTxtValRect.Left;
       FPropInspEdit.Top := LTxtValRect.Top + 3;
 
-      FPropInspEdit.Width := Width - BtnWidth;
+      FPropInspEdit.Width := LTxtValRect.Width - BtnWidth;
       FPropInspEdit.Height := Height - 3;
     end;
     FPropInspEdit.Visible := True;
@@ -3735,13 +3775,14 @@ begin
   if FList.Items.Count = 0 then
     Exit;
   NewHeight := FList.ItemHeight * (FList.Items.Count) + 4;
-  P := Point(Left - DefaultValueManager.GetExtraRectWidth(PropInfo), Top + Height + 2);
+  //P := Point(Left - DefaultValueManager.GetExtraRectWidth(PropInfo), Top + Height + 2);
+  P := Point(FInspector.SplitterPos, Top + Height + 2);
   P := Parent.ClientToScreen(P);
   if (NewHeight + P.Y) >= Screen.Height then
     NewHeight := Screen.Height - P.Y - 50;
   FList.Height := NewHeight;
-  FList.Width := ClientWidth;
-
+  //FList.Width := ClientWidth + PropInspBtnWidth;
+  FList.Width := FInspector.ClientWidth - FInspector.SplitterPos;
   SetWindowPos(FList.Handle, HWND_TOP, P.X, P.Y, 0, 0, SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
 end;
 
@@ -3796,10 +3837,10 @@ begin
   if not DefaultValueManager.HasButton(PropInfo) then
     Exit;
   FButton.Parent := Self.Parent;
-  FButton.Left := Self.Parent.ClientWidth - 17;
+  FButton.Left := Self.Parent.ClientWidth - PropInspBtnWidth;
   FButton.Top := Top - 3;
   FButton.Height := FInspector.FItemHeight; // 17;
-  FButton.Width := 17;
+  FButton.Width := PropInspBtnWidth;
   FButton.Visible := True;
 end;
 
@@ -4028,7 +4069,9 @@ begin
   begin
     ExpPrecision := cDefaultExpPrecision;
     MaxDigits := cDefaultMaxDigits;
+    {$IFDEF CUSTOMFLOATCONV}
     FormatOptions := cDefaultFormatOptions;
+    {$ENDIF}
   end;
 end;
 
@@ -4342,17 +4385,29 @@ begin
   end else if PItem.Value.TypeInfo = TypeInfo(Single) then
   begin
     with TzCustomValueManager.FloatPreference do
+      {$IFDEF CUSTOMFLOATCONV}
       Result := MyFormatFloat(TValueData(Value).FAsSingle, MaxDigits, ExpPrecision, FormatOptions);
+      {$ELSE}
+      Result := TValueData(Value).FAsSingle.ToString(ffGeneral, ExpPrecision, MaxDigits);
+      {$ENDIF}
     Exit;
   end else if PItem.Value.TypeInfo = TypeInfo(Double) then
   begin
     with TzCustomValueManager.FloatPreference do
+      {$IFDEF CUSTOMFLOATCONV}
       Result := MyFormatFloat(TValueData(Value).FAsDouble, MaxDigits, ExpPrecision, FormatOptions);
+      {$ELSE}
+      Result := TValueData(Value).FAsDouble.ToString(ffGeneral, ExpPrecision, MaxDigits);
+      {$ENDIF}
     Exit;
   end else if PItem.Value.TypeInfo = TypeInfo(Extended) then
   begin
     with TzCustomValueManager.FloatPreference do
+      {$IFDEF CUSTOMFLOATCONV}
       Result := MyFormatFloat(Value.AsExtended, MaxDigits, ExpPrecision, FormatOptions);
+      {$ELSE}
+      Result := Value.AsExtended.ToString(ffGeneral, ExpPrecision, MaxDigits);
+      {$ENDIF}
     Exit;
   end;
 
@@ -4573,19 +4628,31 @@ begin
       end;
     vtSingle:
       begin
+        {$IFDEF CUSTOMFLOATCONV}
         MyTryStrToFloat(s, vSingle);
+        {$ELSE}
+        TryStrToFloat(s, vSingle);
+        {$ENDIF}
         Result := fsR;
         Exit;
       end;
     vtDouble:
       begin
+        {$IFDEF CUSTOMFLOATCONV}
         MyTryStrToFloat(s, vDouble);
+        {$ELSE}
+        TryStrToFloat(s, vDouble);
+        {$ENDIF}
         Result := fdR;
         Exit;
       end;
     vtExtended:
       begin
+        {$IFDEF CUSTOMFLOATCONV}
         MyTryStrToFloat(s, vExtended);
+        {$ELSE}
+        TryStrToFloat(s, vExtended);
+        {$ENDIF}
         Result := feR;
         Exit;
       end;
@@ -4628,6 +4695,7 @@ var
   DC: HDC;
   R: TRect;
   OldFontStyles: TFontStyles;
+  OldPenColor : TColor;
 begin
   R := ClientRect;
 
@@ -4643,10 +4711,15 @@ begin
     LStyle.DrawParentBackground(Handle, DC, nil, False);
 
   LStyle.DrawElement(DC, LDetails, ClientRect);
-  P := Point((Width div 2) - 2, (Height div 2) - 2);
-  if FDropDown then
-    DrawArrow(Canvas, sdDown, P, 3)
-  else
+
+  if FDropDown then begin
+    P := Point((Width div 2) - PropInspBtnArrowSize,
+              (Height div 2) - PropInspBtnArrowSize div 2);
+    OldPenColor := Canvas.Pen.Color;
+    Canvas.Pen.Color := LStyle.GetSystemColor(clWindowText);
+    DrawArrow(Canvas, sdDown, P, PropInspBtnArrowSize);
+    Canvas.Pen.Color := OldPenColor;
+  end else
   begin
     OldFontStyles := Canvas.Font.Style;
     if LStyle.IsSystemStyle then
@@ -4833,7 +4906,9 @@ begin
   begin
     MaxDigits := TzFloatPreference(Source).MaxDigits;
     ExpPrecision := TzFloatPreference(Source).ExpPrecision;
+    {$IFDEF CUSTOMFLOATCONV}
     FormatOptions := TzFloatPreference(Source).FormatOptions;
+    {$ENDIF}
   end
   else
     inherited Assign(Source);
