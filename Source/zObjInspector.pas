@@ -962,10 +962,10 @@ begin
 end;
 
 //  Cannot be a local procedure in win64
-  function Compare(Item1, Item2: Pointer): Integer;
-  begin
-    Result := CompareText(PPropItem(Item1)^.FQName, PPropItem(Item2)^.FQName);
-  end;
+function Compare(Item1, Item2: Pointer): Integer;
+begin
+  Result := CompareText(PPropItem(Item1)^.FQName, PPropItem(Item2)^.FQName);
+end;
 
 procedure TPropList.Sort;
 
@@ -2875,10 +2875,10 @@ begin
   begin
     FGutterWidth := MulDiv(FGutterWidth, M, D);
     FSplitterPos := MulDiv(fSplitterPos, M, D);
-    PlusMinWidth := MulDiv(PlusMinWidth, M, D);
-    ColorWidth := MulDiv(ColorWidth, M, D);
-    PropInspBtnWidth := MulDiv(PropInspBtnWidth, M, D);
-    PropInspBtnArrowSize := MulDiv(PropInspBtnArrowSize, M, D);
+    PlusMinWidth := MulDiv(10, M, D);
+    ColorWidth := MulDiv(13, M, D);
+    PropInspBtnWidth := MulDiv(17, M, D);
+    PropInspBtnArrowSize := MulDiv(3, M, D);
     FSepTxtDis := MulDiv(FSepTxtDis, M, D);
   end;
   inherited ChangeScale(M, D{$if CompilerVersion >= 31}, isDpiChange{$endif});
@@ -3077,7 +3077,7 @@ begin
     if Assigned(OnGetItemFriendlyName) then
       PropName := OnGetItemFriendlyName(Self, PItem)
     else
-    PropName := PItem.Name;
+      PropName := PItem.Name;
 
     X := pOrdPos + 4;
     if FShowGridLines then
