@@ -1,0 +1,7 @@
+{
+    "id": "{D03750F5-BC9C-4694-BAD0-90FCE2ECCFD7}",
+    "name": "zControls",
+    "license_type": "MPL-1.1",
+    "platforms": "Win32;Win64",
+    "compiler_min": 21
+}

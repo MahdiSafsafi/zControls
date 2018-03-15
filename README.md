@@ -45,4 +45,5 @@ zControls is a collection of Delphi components,actually it contains only one com
 * Regrouping properties by category .
 * Fully customized : you can easy register your own property !.
 * Action notify : you can allow/prevent user from editing somes properties .
+* Delphinus-Support
 * And more ...!
