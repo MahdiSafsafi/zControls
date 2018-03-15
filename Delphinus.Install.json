@@ -1,0 +1,54 @@
+{
+        "search_pathes": 
+    [
+        {
+            "pathes": "Source",
+            "platforms": "Win32;Win64"
+        },
+        {
+            "pathes": "Source\\FloatConv",
+            "platforms": "Win32;Win64"
+        }
+    ],
+	
+    "browsing_pathes": 
+    [
+        {
+            "pathes": "Source",
+            "platforms": "Win32;Win64"
+        },
+        {
+            "pathes": "Source\\FloatConv",
+            "platforms": "Win32;Win64"
+        }
+    ],
+
+    "source_folders":
+    [
+        {
+            "folder": "Source",
+            "base": "",
+            "recursive": true,
+            "filter": "*;*.*"
+        },
+        {
+            "folder": "Packages",
+            "base": "",
+            "recursive": true,
+            "filter": "*;*.*"
+        },
+        {
+            "folder": "Demo",
+            "base": "",
+            "recursive": true,
+            "filter": "*;*.*"
+        }
+    ],
+
+    "projects":
+    [
+        {
+            "project": "Packages\\zControls.groupproj"
+        }
+    ]
+}
