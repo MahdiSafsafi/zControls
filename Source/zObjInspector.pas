@@ -3415,7 +3415,7 @@ begin
   UpdateEditControl;
 end;
 
-procedure TzCustomObjInspector.UpdateEditControl;
+procedure TzCustomObjInspector.UpdateEditControl(const SetValue: Boolean);
 var
   PItem: PPropItem;
   BtnWidth: Integer;
@@ -3423,7 +3423,10 @@ var
 begin
   if Assigned(FPropInspEdit) then
     if Assigned(FPropInspEdit.Parent) then
+    begin
+      FPropInspEdit.PropInfo := nil;
       FPropInspEdit.Visible := False;
+    end;
   if FSelectedIndex < 0 then
     Exit;
   UpdateSelIndex;
@@ -3761,7 +3764,8 @@ begin
   if not FPropItem.EqualTo(Value) then
   begin
     FPropItem := Value;
-    PropInfoChanged;
+    if Assigned(Value) then
+      PropInfoChanged;
   end;
 end;
 
@@ -3830,7 +3834,7 @@ end;
 procedure TzPropInspEdit.UpdateButton;
 begin
   FButton.Visible := False;
-  if (FInspector.FSelectedIndex < 0) or (FInspector.FSelectedIndex > FInspector.VisiblePropCount) then
+  if (not Assigned(FPropItem)) or (FInspector.FSelectedIndex < 0) or (FInspector.FSelectedIndex > FInspector.VisiblePropCount) then
     Exit;
   if not FPropItem^.Prop.IsWritable then
     Exit;
