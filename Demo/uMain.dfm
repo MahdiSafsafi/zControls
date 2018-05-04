@@ -52,6 +52,8 @@ object Main: TMain
     SplitterPos = 100
     HeaderPropText = 'Property'
     HeaderValueText = 'Value'
+    FloatPreference.MaxDigits = 2
+    FloatPreference.ExpPrecision = 6
     OnBeforeAddItem = zObjectInspector1BeforeAddItem
   end
   object Panel1: TPanel
