@@ -3445,8 +3445,9 @@ end;
 
 procedure TzCustomObjInspector.UnRegisterKeys;
 begin
-  if FUnRegisterKeys and not(csDesigning in ComponentState) then
-    UnregisterHotKey(Handle, 0);
+  if not FUnRegisterKeys then
+    Exit;
+  UnregisterHotKey(Handle, 0);
   FUnRegisterKeys := False;
 end;
 
