@@ -3457,12 +3457,11 @@ var
   BtnWidth: Integer;
   LTxtValRect: TRect;
 begin
-  if Assigned(FPropInspEdit) then
-    if Assigned(FPropInspEdit.Parent) then
-    begin
-      FPropInspEdit.PropInfo := nil;
-      FPropInspEdit.Visible := False;
-    end;
+  if Assigned(FPropInspEdit) and Assigned(FPropInspEdit.Parent) then
+  begin
+    FPropInspEdit.Visible := False;
+    FPropInspEdit.PropInfo := nil;
+  end;
   if FSelectedIndex < 0 then
     Exit;
   UpdateSelIndex;
