@@ -745,13 +745,15 @@ var
   DefaultValueManager: TzCustomValueManagerClass = TzCustomValueManager;
 
 implementation
-
+  
 uses
   zObjInspList,
   zStringsDialog,
   zGraphicDialog;
 
 resourcestring
+  SFalseValue = 'False';
+  STrueValue = 'True';
   SDialogDerivedErr = 'Dialog must be derived from TCommonDialog or TzInspDialog';
   SInvalidPropValueErr = 'Invalid property value.';
   SOutOfRangeErr = 'Index out of range.';
@@ -934,7 +936,7 @@ end;
 
 function BooleanToStr(B: Boolean): string;
 const
-  BoolStrs: array [Boolean] of String = ('False', 'True');
+  BoolStrs: array [Boolean] of String = (SFalseValue , STrueValue);
 begin
   Result := BoolStrs[B];
 end;
