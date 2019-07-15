@@ -935,10 +935,11 @@ begin
 end;
 
 function BooleanToStr(B: Boolean): string;
-const
-  BoolStrs: array [Boolean] of String = (SFalseValue , STrueValue);
 begin
-  Result := BoolStrs[B];
+  if B then
+    Result := STrueValue
+  else
+    Result := SFalseValue;
 end;
 
 function GetFormRoot(Comp: TObject): TCustomForm;
@@ -4417,6 +4418,11 @@ begin
   if PItem.IsSetElement then
   begin
     Result := BooleanToStr(SetEnumToBoolean(GetEnumOrdValue(Value), PItem.SetElementValue));
+    Exit;
+  end
+  else if (Value.TypeInfo = TypeInfo(Boolean)) then
+  begin
+    Result := BooleanToStr(GetValueAs<Boolean>(Value));
     Exit;
   end
   else if (Value.TypeInfo = TypeInfo(TColor)) then
