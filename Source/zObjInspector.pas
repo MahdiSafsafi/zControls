@@ -202,7 +202,7 @@ type
     /// </summary>
     /// <returns> non zero to indicate that value must use an ExtraRect .
     /// </returns>
-    class function GetExtraRectWidth(const PItem: PPropItem): Integer; virtual;
+    class function GetExtraRectWidth(const PItem: PPropItem; PPI: Integer): Integer; virtual;
     class function GetValueType(const PItem: PPropItem): Integer; virtual;
     /// <summary> Paint item value name .
     /// </summary>
@@ -562,6 +562,7 @@ type
     FAllowSearch: Boolean;
     FCategoryColor: TColor;
     FCategoryTextColor: TColor;
+    FPlusMinWidth: Integer;
     procedure CMSTYLECHANGED(var Message: TMessage); message CM_STYLECHANGED;
     procedure WMKILLFOCUS(var Msg: TWMKILLFOCUS); message WM_KILLFOCUS;
     procedure WMSETFOCUS(var Msg: TWMSetFocus); message WM_SETFOCUS;
@@ -760,7 +761,6 @@ resourcestring
   SSelNonVisibleItemErr = 'Could not select a non visible item.';
 
 Var
-  PlusMinWidth: Integer = 10;
   ColorWidth: Integer = 13;
   PropInspBtnWidth: Integer = 17;
   PropInspBtnArrowSize: Integer = 3;
@@ -779,7 +779,38 @@ type
   InvalidPropValueError = class(InspException);
   OutOfRangeError       = class(InspException);
 
-  { =============>Utils<============= }
+{ TControlHelper }
+
+(*  Helper methods for TControl *)
+TControlHelper = class helper for TControl
+public
+  {$IF CompilerVersion < 33}   // older than Delphi Rio
+  function FCurrentPPI: integer;
+  {$IFEND}
+  (* Scale a value according to the FCurrentPPI *)
+  function PPIScale(Value: integer): integer;
+  (* Reverse PPI Scaling  *)
+  function PPIUnScale(Value: integer): integer;
+end;
+
+{$IF CompilerVersion < 33}   // older than Delphi Rio
+function TControlHelper.FCurrentPPI: integer;
+begin
+  Result := Screen.PixelsPerInch;
+end;
+{$IFEND}
+
+function TControlHelper.PPIScale(Value: integer): integer;
+begin
+  Result := MulDiv(Value, FCurrentPPI, 96);
+end;
+
+function TControlHelper.PPIUnScale(Value: integer): integer;
+begin
+  Result := MulDiv(Value, 96, FCurrentPPI);
+end;
+
+{ =============>Utils<============= }
 function GetMethodName(Value: TValue; Obj: TObject): String;
 begin
   Result := '';
@@ -2415,6 +2446,7 @@ begin
   FTrackChange := False;
   FSepTxtDis := 4;
   FSelectedIndex := -1;
+  FPlusMinWidth := 10;
   FPropInspEdit := TzPropInspEdit.Create(Self, Self);
   FPropInspEdit.Visible := False;
   if not(csDesigning In ComponentState) then
@@ -2656,7 +2688,7 @@ var
 begin
   Result := TRect.Empty;
   PItem := FVisibleItems[Index];
-  w := DefaultValueManager.GetExtraRectWidth(PItem);
+  w := DefaultValueManager.GetExtraRectWidth(PItem, FCurrentPPI);
   if w > 0 then
   begin
     R := ValueRect[Index];
@@ -2691,11 +2723,11 @@ begin
   Result := TRect.Empty;
   POrd := GetItemOrder(FVisibleItems.Items[Index]);
   pOrdPos := (POrd * FGutterWidth) + FGutterWidth;
-  X := (pOrdPos - PlusMinWidth) - 3;
+  X := (pOrdPos - FPlusMinWidth) - 3;
   Y := GetItemTop(IndexToVirtualIndex(Index));
   R := Rect(0, Y, pOrdPos, Y + FItemHeight);
-  cY := CenterPoint(R).Y - (PlusMinWidth div 2);
-  Result := Rect(X, cY, X + PlusMinWidth, cY + PlusMinWidth);
+  cY := CenterPoint(R).Y - (FPlusMinWidth div 2);
+  Result := Rect(X, cY, X + FPlusMinWidth, cY + FPlusMinWidth);
 end;
 
 function TzCustomObjInspector.GetPropTextRect(Index: Integer): TRect;
@@ -2895,10 +2927,7 @@ begin
   begin
     FGutterWidth := MulDiv(FGutterWidth, M, D);
     FSplitterPos := MulDiv(FSplitterPos, M, D);
-    PlusMinWidth := MulDiv(10, M, D);
-    ColorWidth := MulDiv(13, M, D);
-    PropInspBtnWidth := MulDiv(17, M, D);
-    PropInspBtnArrowSize := MulDiv(3, M, D);
+    FPlusMinWidth := MulDiv(FPlusMinWidth, M, D);
     FSepTxtDis := MulDiv(FSepTxtDis, M, D);
   end;
   inherited ChangeScale(M, D{$IF CompilerVersion >= 31}, isDpiChange{$ENDIF});
@@ -3085,15 +3114,15 @@ begin
   begin
     if CanDrawChevron(Index) then
     begin
-      cY := CenterPoint(pmR).Y - PropInspBtnArrowSize;
-      X := pOrdPos - (PropInspBtnArrowSize * 2) - 1; // pOrdPos - (>>)-1
+      cY := CenterPoint(pmR).Y - PPIScale(PropInspBtnArrowSize);
+      X := pOrdPos - (PPIScale(PropInspBtnArrowSize) * 2) - 1; // pOrdPos - (>>)-1
       // cY:=R.Top;
       if HasPlusMinus then
-        Dec(X, PlusMinWidth + 2);
+        Dec(X, FPlusMinWidth + 2);
       Canvas.Pen.Color := clWindowText;
       if UseStyleColor then
         Canvas.Pen.Color := StyleServices.GetSystemColor(clWindowText);
-      DrawChevron(Canvas, sdRight, Point(X, cY), PropInspBtnArrowSize);
+      DrawChevron(Canvas, sdRight, Point(X, cY), PPIScale(PropInspBtnArrowSize));
     end;
 
     if Assigned(OnGetItemFriendlyName) then
@@ -3153,7 +3182,7 @@ begin
     Canvas.Brush.Color := LSaveColor;
     Canvas.Pen.Color := FGridColor;
 
-    HorzDotLeft := DefaultValueManager.GetExtraRectWidth(PItem);
+    HorzDotLeft := DefaultValueManager.GetExtraRectWidth(PItem, FCurrentPPI);
     if HorzDotLeft > 0 then
       HorzDotLeft := ValueTextRect[Index].Left
     else
@@ -3486,7 +3515,7 @@ begin
     with ValueRect[FSelectedIndex] do
     begin
       if DefaultValueManager.HasButton(PItem) then
-        BtnWidth := PropInspBtnWidth // 17
+        BtnWidth := PPIScale(PropInspBtnWidth) // 17
       else
         BtnWidth := 0;
       FPropInspEdit.Left := LTxtValRect.Left;
@@ -3890,10 +3919,10 @@ begin
   if not DefaultValueManager.HasButton(PropInfo) then
     Exit;
   FButton.Parent := Self.Parent;
-  FButton.Left := Self.Parent.ClientWidth - PropInspBtnWidth;
+  FButton.Left := Self.Parent.ClientWidth - PPIScale(PropInspBtnWidth);
   FButton.Top := Top - 3;
   FButton.Height := FInspector.FItemHeight; // 17;
-  FButton.Width := PropInspBtnWidth;
+  FButton.Width := PPIScale(PropInspBtnWidth);
   FButton.Visible := True;
 end;
 
@@ -4199,7 +4228,7 @@ begin
   end;
 end;
 
-class function TzCustomValueManager.GetExtraRectWidth(const PItem: PPropItem): Integer;
+class function TzCustomValueManager.GetExtraRectWidth(const PItem: PPropItem; PPI: Integer): Integer;
 var
   LDetails: TThemedElementDetails;
   Size: TSize;
@@ -4212,7 +4241,7 @@ begin
         StyleServices.GetElementSize(0, LDetails, esActual, Size);
         Result := Size.Width;
       end;
-    vtColor: Result := ColorWidth + 1;
+    vtColor: Result := MulDiv(ColorWidth + 1, PPI, 96);
   end;
 end;
 
@@ -4793,11 +4822,11 @@ begin
 
   if FDropDown then
   begin
-    P := Point((Width div 2) - PropInspBtnArrowSize,
-      (Height div 2) - PropInspBtnArrowSize div 2);
+    P := Point((Width div 2) - PPIScale(PropInspBtnArrowSize),
+      (Height div 2) - PPIScale(PropInspBtnArrowSize) div 2);
     OldPenColor := Canvas.Pen.Color;
     Canvas.Pen.Color := LStyle.GetSystemColor(clWindowText);
-    DrawArrow(Canvas, sdDown, P, PropInspBtnArrowSize);
+    DrawArrow(Canvas, sdDown, P, PPIScale(PropInspBtnArrowSize));
     Canvas.Pen.Color := OldPenColor;
   end
   else
