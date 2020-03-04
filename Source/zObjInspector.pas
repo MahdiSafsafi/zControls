@@ -784,7 +784,7 @@ type
 (*  Helper methods for TControl *)
 TControlHelper = class helper for TControl
 public
-  {$IF CompilerVersion < 33}   // older than Delphi Rio
+  {$IF CompilerVersion < 32}
   function FCurrentPPI: integer;
   {$IFEND}
   (* Scale a value according to the FCurrentPPI *)
@@ -793,7 +793,7 @@ public
   function PPIUnScale(Value: integer): integer;
 end;
 
-{$IF CompilerVersion < 33}   // older than Delphi Rio
+{$IF CompilerVersion < 32}
 function TControlHelper.FCurrentPPI: integer;
 begin
   Result := Screen.PixelsPerInch;
@@ -4239,7 +4239,7 @@ begin
       begin
         LDetails := StyleServices.GetElementDetails(tbCheckBoxUnCheckedNormal);
         StyleServices.GetElementSize(0, LDetails, esActual, Size);
-        Result := Size.Width;
+        Result := MulDiv(Size.Width, PPI, Screen.PixelsPerInch);
       end;
     vtColor: Result := MulDiv(ColorWidth + 1, PPI, 96);
   end;
