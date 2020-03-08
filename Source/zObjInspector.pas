@@ -3107,7 +3107,7 @@ begin
   pmR := PlusMinBtnRect[Index];
   if PItem^.HasChild and (not FCircularLinkProps.Contains(PItem^.FQName)) then
   begin
-    DrawPlusMinus(Canvas, pmR.Left, pmR.Top, not PItem.Expanded, pmR.Width);
+    DrawPlusMinus(Canvas, pmR.Left, pmR.Top, not PItem.Expanded, pmR.Width, FCurrentPPI);
     HasPlusMinus := True;
   end;
   if not PItem^.IsCategory then
