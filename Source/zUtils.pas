@@ -35,7 +35,7 @@ uses
   Vcl.Themes;
 
 function RectVCenter(var R: TRect; Bounds: TRect): TRect;
-procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean; Width: Integer = 9);
+procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean; Width: Integer = 9; PPI: Integer = 96);
 procedure zFillRect(DC: HDC; R: TRect; Color: COLORREF); overload;
 procedure zFillRect(DC: HDC; R: TRect; Color, BorderColor: COLORREF; DX, DY: Integer); overload;
 procedure DrawHorzDotLine(Canvas: TCanvas; X, Y, Width: Integer);
@@ -167,7 +167,7 @@ begin
   Result := R;
 end;
 
-procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean; Width: Integer = 9);
+procedure DrawPlusMinus(Canvas: TCanvas; X, Y: Integer; Collapsed: Boolean; Width: Integer = 9; PPI: Integer = 96);
 var
   Height: Integer;
   Details: TThemedElementDetails;
@@ -183,7 +183,8 @@ begin
       Details := LStyle.GetElementDetails(tcbCategoryGlyphClosed)
     else
       Details := LStyle.GetElementDetails(tcbCategoryGlyphOpened);
-    LStyle.DrawElement(Canvas.Handle, Details, Rect(X, Y, X + Width, Y + Width));
+    LStyle.DrawElement(Canvas.Handle, Details,
+      Rect(X, Y, X + Width, Y + Width){$IF CompilerVersion >= 33}, nil, PPI{$IFEND});
   end else begin
     Canvas.Pen.Color := clBtnShadow;
     Canvas.Brush.Color := clWindow;
