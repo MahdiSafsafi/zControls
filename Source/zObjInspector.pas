@@ -57,50 +57,50 @@ uses
   Typinfo;
 
 const
-  vtUnknown    = 0;
-  vtEnum       = 1;
-  vtSet        = 2;
+  vtUnknown = 0;
+  vtEnum = 1;
+  vtSet = 2;
   vtSetElement = 3;
-  vtObj        = 4;
-  vtMethod     = 5;
-  vtBool       = 6;
-  vtString     = 7;
-  vtChar       = 8;
-  vtColor      = 9;
-  vtCursor     = 10;
-  vtFont       = 11;
-  vtIcon       = 12;
-  vtShortCut   = 13;
-  vtSingle     = 14;
-  vtDouble     = 15;
-  vtExtended   = 16;
+  vtObj = 4;
+  vtMethod = 5;
+  vtBool = 6;
+  vtString = 7;
+  vtChar = 8;
+  vtColor = 9;
+  vtCursor = 10;
+  vtFont = 11;
+  vtIcon = 12;
+  vtShortCut = 13;
+  vtSingle = 14;
+  vtDouble = 15;
+  vtExtended = 16;
 
-  dcInit             = 0;
+  dcInit = 0;
   dcBeforeDestroying = 1;
-  dcShow             = 2;
-  dcFinished         = 3;
+  dcShow = 2;
+  dcFinished = 3;
 
 type
-  TzObjInspectorBase         = class;
-  TzObjInspectorList         = class;
-  TzObjInspectorSizing       = class;
-  TzObjInspectorHeader       = class;
-  TzScrollObjInspectorList   = class;
-  TzCustomObjInspector       = class;
-  TzObjectInspector          = class;
+  TzObjInspectorBase = class;
+  TzObjInspectorList = class;
+  TzObjInspectorSizing = class;
+  TzObjInspectorHeader = class;
+  TzScrollObjInspectorList = class;
+  TzCustomObjInspector = class;
+  TzObjectInspector = class;
   TzObjectInspectorStyleHook = class;
-  TzPopupListBox             = class;
-  TzPropInspButton           = class;
-  TzPropInspEdit             = class;
-  TzCustomValueManager       = class;
-  TzRttiType                 = class;
-  TPropList                  = class;
-  TPopupListClass            = class of TzPopupListBox;
-  THeaderItem                = (hiProp, hiVal);
-  TItemHintWindow            = class;
-  TzObjectHost               = class;
-  TzInspDialog               = class;
-  PPropItem                  = ^TPropItem;
+  TzPopupListBox = class;
+  TzPropInspButton = class;
+  TzPropInspEdit = class;
+  TzCustomValueManager = class;
+  TzRttiType = class;
+  TPropList = class;
+  TPopupListClass = class of TzPopupListBox;
+  THeaderItem = (hiProp, hiVal);
+  TItemHintWindow = class;
+  TzObjectHost = class;
+  TzInspDialog = class;
+  PPropItem = ^TPropItem;
 
   TPropItem = record
     Parent: PPropItem;
@@ -154,11 +154,11 @@ type
     procedure Sort;
   end;
 
-  TPropItemEvent            = function(Sender: TControl; PItem: PPropItem): Boolean of object;
+  TPropItemEvent = function(Sender: TControl; PItem: PPropItem): Boolean of object;
   TGetItemFriendlyNameEvent = function(Sender: TControl; PItem: PPropItem): string of object;
-  TSplitterPosChangedEvent  = procedure(Sender: TControl; var Pos: Integer) of object;
-  THeaderMouseDownEvent     = procedure(Sender: TControl; Item: THeaderItem; X, Y: Integer) of object;
-  TItemSetValue             = function(Sender: TControl; PItem: PPropItem; var NewValue: TValue): Boolean of object;
+  TSplitterPosChangedEvent = procedure(Sender: TControl; var Pos: Integer) of object;
+  THeaderMouseDownEvent = procedure(Sender: TControl; Item: THeaderItem; X, Y: Integer) of object;
+  TItemSetValue = function(Sender: TControl; PItem: PPropItem; var NewValue: TValue): Boolean of object;
 
   TzRttiType = class(TRttiType)
     function GetUsedProperties: TArray<TRttiProperty>;
@@ -658,8 +658,7 @@ type
     property OnGetItemReadOnly: TPropItemEvent read FOnGetItemReadOnly write FOnGetItemReadOnly;
     property OnItemSetValue: TItemSetValue read FOnItemSetValue write FOnItemSetValue;
     property OnCollapseItem: TPropItemEvent read FOnCollapseItem write FOnCollapseItem;
-    property OnGetItemFriendlyName: TGetItemFriendlyNameEvent
-      read FOnGetItemFriendlyName write FOnGetItemFriendlyName;
+    property OnGetItemFriendlyName: TGetItemFriendlyNameEvent read FOnGetItemFriendlyName write FOnGetItemFriendlyName;
     property OnExpandItem: TPropItemEvent read FOnExpandItem write FOnExpandItem;
     property OnSelectItem: TPropItemEvent read FOnSelectItem write FOnSelectItem;
     property AllowSearch: Boolean read FAllowSearch write SetAllowSearch;
@@ -746,7 +745,7 @@ var
   DefaultValueManager: TzCustomValueManagerClass = TzCustomValueManager;
 
 implementation
-  
+
 uses
   zObjInspList,
   zStringsDialog,
@@ -766,46 +765,46 @@ Var
   PropInspBtnArrowSize: Integer = 3;
 
 const
-  cDefaultMaxDigits    = 2;
+  cDefaultMaxDigits = 2;
   cDefaultExpPrecision = 6;
 {$IFDEF CUSTOMFLOATCONV}
   cDefaultFormatOptions: TFloatFormatOptions = [];
 {$ENDIF}
 
-
 type
-  InspException         = class(Exception);
-  DialogDerivedError    = class(InspException);
+  InspException = class(Exception);
+  DialogDerivedError = class(InspException);
   InvalidPropValueError = class(InspException);
-  OutOfRangeError       = class(InspException);
+  OutOfRangeError = class(InspException);
 
-{ TControlHelper }
+  { TControlHelper }
 
-(*  Helper methods for TControl *)
-TControlHelper = class helper for TControl
-public
-  {$IF CompilerVersion < 32}
-  function FCurrentPPI: integer;
-  {$IFEND}
-  (* Scale a value according to the FCurrentPPI *)
-  function PPIScale(Value: integer): integer;
-  (* Reverse PPI Scaling  *)
-  function PPIUnScale(Value: integer): integer;
-end;
+  (* Helper methods for TControl *)
+  TControlHelper = class helper for TControl
+  public
+{$IF CompilerVersion < 32}
+    function FCurrentPPI: Integer;
+{$IFEND}
+    (* Scale a value according to the FCurrentPPI *)
+    function PPIScale(Value: Integer): Integer;
+    (* Reverse PPI Scaling *)
+    function PPIUnScale(Value: Integer): Integer;
+  end;
 
 {$IF CompilerVersion < 32}
-function TControlHelper.FCurrentPPI: integer;
+
+function TControlHelper.FCurrentPPI: Integer;
 begin
   Result := Screen.PixelsPerInch;
 end;
 {$IFEND}
 
-function TControlHelper.PPIScale(Value: integer): integer;
+function TControlHelper.PPIScale(Value: Integer): Integer;
 begin
   Result := MulDiv(Value, FCurrentPPI, 96);
 end;
 
-function TControlHelper.PPIUnScale(Value: integer): integer;
+function TControlHelper.PPIUnScale(Value: Integer): Integer;
 begin
   Result := MulDiv(Value, 96, FCurrentPPI);
 end;
@@ -943,12 +942,18 @@ begin
   Result := 0;
   vd := TValueData(Value);
   case Value.TypeData.OrdType of
-    otSByte: Result := vd.FAsSByte;
-    otUByte: Result := vd.FAsUByte;
-    otSWord: Result := vd.FAsSWord;
-    otUWord: Result := vd.FAsUWord;
-    otSLong: Result := vd.FAsSLong;
-    otULong: Result := vd.FAsULong;
+    otSByte:
+      Result := vd.FAsSByte;
+    otUByte:
+      Result := vd.FAsUByte;
+    otSWord:
+      Result := vd.FAsSWord;
+    otUWord:
+      Result := vd.FAsUWord;
+    otSLong:
+      Result := vd.FAsSLong;
+    otULong:
+      Result := vd.FAsULong;
   end;
 end;
 
@@ -2224,13 +2229,13 @@ end;
 
 procedure TzScrollObjInspectorList.UpdateScrollBar;
 begin
-  FSI.cbSize := SizeOf(FSI);
-  FSI.fMask := SIF_RANGE or SIF_PAGE;
-  FSI.nMin := 0;
-  FSI.nMax := VisiblePropCount - 1;
-  FSI.nPage := GetMaxItemCount;
   if Assigned(Parent) and not(csDestroying in ComponentState) then
   begin
+    FSI.cbSize := SizeOf(FSI);
+    FSI.fMask := SIF_RANGE or SIF_PAGE;
+    FSI.nMin := 0;
+    FSI.nMax := VisiblePropCount - 1;
+    FSI.nPage := GetMaxItemCount;
     SetScrollInfo(Handle, SB_VERT, FSI, False);
     InvalidateNC;
   end;
@@ -2330,12 +2335,18 @@ begin
   YPos := FSI.nPos;
 
   case Message.ScrollCode of
-    SB_TOP: FSI.nPos := FSI.nMin;
-    SB_BOTTOM: FSI.nPos := FSI.nMax;
-    SB_LINEUP: FSI.nPos := FSI.nPos - 1;
-    SB_LINEDOWN: FSI.nPos := FSI.nPos + 1;
-    SB_PAGEUP: FSI.nPos := FSI.nPos - Integer(FSI.nPage);
-    SB_PAGEDOWN: FSI.nPos := FSI.nPos + Integer(FSI.nPage);
+    SB_TOP:
+      FSI.nPos := FSI.nMin;
+    SB_BOTTOM:
+      FSI.nPos := FSI.nMax;
+    SB_LINEUP:
+      FSI.nPos := FSI.nPos - 1;
+    SB_LINEDOWN:
+      FSI.nPos := FSI.nPos + 1;
+    SB_PAGEUP:
+      FSI.nPos := FSI.nPos - Integer(FSI.nPage);
+    SB_PAGEDOWN:
+      FSI.nPos := FSI.nPos + Integer(FSI.nPage);
     SB_THUMBTRACK: { VCL Style Support ! }
       begin
         if StyleServices.Available and (not StyleServices.IsSystemStyle) then
@@ -3564,7 +3575,7 @@ begin
     if FAllowSearch and (Msg.HotKey = 0) then
       if Assigned(LForm.ActiveControl) then
         if (WinInWin(LForm.ActiveControl.Handle, Handle)) then
-        begin                          { ActiveControl must be Self or childs of Self ! }
+        begin { ActiveControl must be Self or childs of Self ! }
           if GetCaretWin = Handle then // searching
           begin
             FSearchText := '';
@@ -4178,8 +4189,10 @@ class function TzCustomValueManager.DialogResultValue(const PItem: PPropItem; Di
 begin
   Result := PItem.Value;
   case GetValueType(PItem) of
-    vtColor: Result := GetValue(PItem, TColorDialog(Dialog).Color);
-    vtFont: Result := GetValue(PItem, TFontDialog(Dialog).Font);
+    vtColor:
+      Result := GetValue(PItem, TColorDialog(Dialog).Color);
+    vtFont:
+      Result := GetValue(PItem, TFontDialog(Dialog).Font);
   end;
 end;
 
@@ -4194,8 +4207,10 @@ begin
         else if PItem.Value.AsObject is TGraphic then
           Exit(TGraphicDialog);
       end;
-    vtColor: Result := TColorDialog;
-    vtFont: Result := TFontDialog;
+    vtColor:
+      Result := TColorDialog;
+    vtFont:
+      Result := TFontDialog;
   end;
 end;
 
@@ -4241,7 +4256,8 @@ begin
         StyleServices.GetElementSize(0, LDetails, esActual, Size);
         Result := MulDiv(Size.Width, PPI, Screen.PixelsPerInch);
       end;
-    vtColor: Result := MulDiv(ColorWidth + 1, PPI, 96);
+    vtColor:
+      Result := MulDiv(ColorWidth + 1, PPI, 96);
   end;
 end;
 
@@ -4389,8 +4405,8 @@ end;
 
 class function TzCustomValueManager.GetValueAs<T>(const Value: TValue): T;
 var
-  sValue: Int64;         // Signed Value !
-  uValue: UInt64;        // UnSigned Value !
+  sValue: Int64; // Signed Value !
+  uValue: UInt64; // UnSigned Value !
   sR: T absolute sValue; // Signed Result !
   uR: T absolute uValue; // UnSigned Result !
   ValSign: Boolean;
@@ -4533,9 +4549,12 @@ begin
   if Assigned(PItem.Prop) then
   begin
     case PItem.Prop.PropertyType.TypeKind of
-      tkMethod: Exit(vtMethod);
-      tkString, tkWString, tkUString: Exit(vtString);
-      tkWChar, tkChar: Exit(vtChar);
+      tkMethod:
+        Exit(vtMethod);
+      tkString, tkWString, tkUString:
+        Exit(vtString);
+      tkWChar, tkChar:
+        Exit(vtChar);
     end;
   end;
   if Value.TypeInfo = TypeInfo(TColor) then
@@ -4577,7 +4596,8 @@ class function TzCustomValueManager.HasButton(const PItem: PPropItem): Boolean;
 begin
   Result := False;
   case GetValueType(PItem) of
-    vtFont: Exit(True);
+    vtFont:
+      Exit(True);
   end;
   if HasList(PItem) or HasDialog(PItem) then
     Result := True;
@@ -4648,7 +4668,8 @@ begin
   if (VT = vtBool) or (VT = vtSetElement) then
   begin
     case VT of
-      vtBool: BoolVal := GetValueAs<Boolean>(Value);
+      vtBool:
+        BoolVal := GetValueAs<Boolean>(Value);
       vtSetElement:
         BoolVal := SetEnumToBoolean(GetEnumOrdValue(Value), PItem.SetElementValue);
     end;
@@ -4783,7 +4804,8 @@ class function TzCustomValueManager.ValueHasOpenProbabilities(const PItem: PProp
 begin
   Result := False;
   case GetValueType(PItem) of
-    vtColor, vtString, vtUnknown: Exit(True);
+    vtColor, vtString, vtUnknown:
+      Exit(True);
   end;
 end;
 
@@ -4822,8 +4844,7 @@ begin
 
   if FDropDown then
   begin
-    P := Point((Width div 2) - PPIScale(PropInspBtnArrowSize),
-      (Height div 2) - PPIScale(PropInspBtnArrowSize) div 2);
+    P := Point((Width div 2) - PPIScale(PropInspBtnArrowSize), (Height div 2) - PPIScale(PropInspBtnArrowSize) div 2);
     OldPenColor := Canvas.Pen.Color;
     Canvas.Pen.Color := LStyle.GetSystemColor(clWindowText);
     DrawArrow(Canvas, sdDown, P, PPIScale(PropInspBtnArrowSize));
