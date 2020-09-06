@@ -206,7 +206,7 @@ type
     class function GetValueType(const PItem: PPropItem): Integer; virtual;
     /// <summary> Paint item value name .
     /// </summary>
-    class procedure PaintValue(Canvas: TCanvas; Index: Integer; const PItem: PPropItem; R: TRect); virtual;
+    class procedure PaintValue(Canvas: TCanvas; Index: Integer; const PItem: PPropItem; R: TRect; PPI: Integer = 0); virtual;
     /// <summary> Check if the current item can have button .
     /// </summary>
     class function HasButton(const PItem: PPropItem): Boolean; virtual;
@@ -3275,7 +3275,7 @@ var
 begin
   CanvasStack.Push(Canvas);
   R := ValueRect[Index];
-  DefaultValueManager.PaintValue(Canvas, Index, PItem, R);
+  DefaultValueManager.PaintValue(Canvas, Index, PItem, R{$IF CompilerVersion >= 33}, FCurrentPPI{$IFEND});
   CanvasStack.Pop;
 end;
 
@@ -4640,7 +4640,7 @@ begin
   end;
 end;
 
-class procedure TzCustomValueManager.PaintValue(Canvas: TCanvas; Index: Integer; const PItem: PPropItem; R: TRect);
+class procedure TzCustomValueManager.PaintValue(Canvas: TCanvas; Index: Integer; const PItem: PPropItem; R: TRect; PPI: Integer);
 var
   Value: TValue;
   ExtRect: TRect;
@@ -4678,7 +4678,7 @@ begin
     else
       LDetails := LStyle.GetElementDetails(tbCheckBoxUnCheckedNormal);
     ExtRect := LInspector.ExtraRect[Index];
-    LStyle.DrawElement(DC, LDetails, ExtRect);
+    LStyle.DrawElement(DC, LDetails, ExtRect{$IF CompilerVersion >= 33},nil, PPI{$IFEND});
   end
   else if VT = vtColor then
   begin
