@@ -75,10 +75,8 @@ const
   vtDouble = 15;
   vtExtended = 16;
 
-  dcInit = 0;
-  dcBeforeDestroying = 1;
-  dcShow = 2;
-  dcFinished = 3;
+type
+  TzDialogState = (dcInit, dcBeforeDestroying, dcShow, dcFinished);
 
 type
   TzObjInspectorBase = class;
@@ -219,7 +217,8 @@ type
     /// <summary> Get customized dialog for current item .
     /// </summary>
     class function GetDialog(const PItem: PPropItem): TComponentClass; virtual;
-    class procedure DialogCode(const PItem: PPropItem; Dialog: TComponent; Code: Integer); virtual;
+    class function DialogCode(const PItem: PPropItem; Dialog: TComponent; DlgState:
+        TzDialogState): Boolean; virtual;
     /// <summary> Get the value returned after editing from the dialog .
     /// </summary>
     class function DialogResultValue(const PItem: PPropItem; Dialog: TComponent): TValue; virtual;
@@ -496,6 +495,7 @@ type
     FSI: TScrollInfo;
     FPrevScrollPos: Integer;
     procedure CMFONTCHANGED(var Message: TMessage); message CM_FONTCHANGED;
+    procedure CMParentFontChanged(var Message: TCMParentFontChanged); message CM_PARENTFONTCHANGED;
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure WMVScroll(var Message: TWMVScroll); message WM_VSCROLL;
     procedure WMWINDOWPOSCHANGED(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
@@ -710,6 +710,8 @@ type
     property HeaderValueText;
     property ObjectVisibility;
     property FloatPreference;
+    property ParentFont;
+    property DoubleBuffered;
     property OnClick;
     property OnContextPopup;
     property OnDragDrop;
@@ -2107,6 +2109,17 @@ begin
   inherited;
   Canvas.Font.Assign(Font);
   FItemHeight := Canvas.TextHeight('WA') + 4; // 17;
+end;
+
+procedure TzScrollObjInspectorList.CMParentFontChanged(
+  var Message: TCMParentFontChanged);
+begin
+  inherited;
+  if ParentFont then
+  begin
+    Canvas.Font.Assign(Font);
+    FItemHeight := Canvas.TextHeight('WA') + 4;
+  end;
 end;
 
 constructor TzScrollObjInspectorList.Create(AOwner: TComponent);
@@ -3883,11 +3896,8 @@ procedure TzPropInspEdit.ShowModalDialog;
 var
   DialogClass: TComponentClass;
   Dialog: TComponent;
-  mr: Integer;
   Value: TValue;
 begin
-  if not FPropItem^.Prop.IsWritable then
-    Exit;
   DialogClass := nil;
   with DefaultValueManager do
   begin
@@ -3895,25 +3905,17 @@ begin
       DialogClass := GetDialog(FPropItem);
     if Assigned(DialogClass) then
     begin
-      mr := 0;
-      Dialog := DialogClass.Create(Self);
-      if (not(Dialog is TCommonDialog)) and (not(Dialog is TzInspDialog)) then
+      if not (DialogClass.InheritsFrom(TCommonDialog) or DialogClass.InheritsFrom(TzInspDialog)) then
         raise DialogDerivedError.CreateRes(@SDialogDerivedErr);
-      if Dialog is TzInspDialog then
-        TzInspDialog(Dialog).PropItem := FPropItem;
-      DialogCode(FPropItem, Dialog, dcInit);
-      DialogCode(FPropItem, Dialog, dcShow);
-      if Dialog is TCommonDialog then
-        mr := Integer(TCommonDialog(Dialog).Execute)
-      else if Dialog is TzInspDialog then
-        mr := TzInspDialog(Dialog).ShowModal;
-      PostMessage(Handle, WM_LBUTTONUP, 0, 0);
-      if mr = mrOk then
+      Dialog := DialogClass.Create(Self);
+      if DialogCode(FPropItem, Dialog, dcInit) and
+        DialogCode(FPropItem, Dialog, dcShow) then
       begin
         DialogCode(FPropItem, Dialog, dcFinished);
         Value := DialogResultValue(FPropItem, Dialog);
         FInspector.DoSetValue(FPropItem, Value);
       end;
+      PostMessage(Handle, WM_LBUTTONUP, 0, 0);
       DialogCode(FPropItem, Dialog, dcBeforeDestroying);
       FreeAndNil(Dialog);
     end;
@@ -4180,9 +4182,39 @@ begin
   TzCustomValueManager.FloatPreference.Free;
 end;
 
-class procedure TzCustomValueManager.DialogCode(const PItem: PPropItem; Dialog: TComponent; Code: Integer);
+class function TzCustomValueManager.DialogCode(const PItem: PPropItem; Dialog:
+    TComponent; DlgState: TzDialogState): Boolean;
 begin
-
+  case DlgState of
+    dcInit:
+      begin
+        Result := True;
+        if Dialog is TzInspDialog then
+          TzInspDialog(Dialog).PropItem := PItem
+        else
+          case GetValueType(PItem) of
+            vtColor:
+              TColorDialog(Dialog).Color := TColor(PItem.Value.AsInteger);
+            vtFont:
+              TFontDialog(Dialog).Font := TFont(PItem.Value.AsObject);
+          else
+            Result := False;
+          end;
+      end;
+    dcBeforeDestroying:
+      Result := True;
+    dcShow:
+      if Dialog is TCommonDialog then
+         Result := TCommonDialog(Dialog).Execute
+      else if Dialog is TzInspDialog then
+        Result := TzInspDialog(Dialog).ShowModal = mrOK
+      else
+        Result := False;
+    dcFinished:
+      Result := True;
+  else
+    Result := False; // To avoid stupid warning
+  end;
 end;
 
 class function TzCustomValueManager.DialogResultValue(const PItem: PPropItem; Dialog: TComponent): TValue;
