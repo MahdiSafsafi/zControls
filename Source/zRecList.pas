@@ -111,8 +111,8 @@ begin
 end;
 
 function TzRecordList<T, P>.Add(const Rec: T): Integer;
-var
-  PRec: PByte;
+(* var
+  PRec: PByte; *)
 begin
   (* PRec := AllocMem(SizeOf(T));
     FList.Add(PRec);
@@ -149,7 +149,6 @@ function TzRecordList<T, P>.Delete(const Index: Integer): Boolean;
 var
   PRec: Pointer;
 begin
-  Result := False;
   if (Index > -1) and (Index < FCount) then
   begin
     PRec := FList.Items[Index];
@@ -206,7 +205,6 @@ end;
 
 function TzRecordList<T, P>.Get(const Index: Integer): P;
 begin
-  Result := P(nil);
   if (Index > -1) and (Index < FCount) then
   begin
     Result := PointerToP(FList.Items[Index]);
