@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{164AB00E-993A-46B2-9519-5B76EDE39E45}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="zControls_R.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="zControls_D.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="zControls_R">
+        <MSBuild Projects="zControls_R.dproj"/>
+    </Target>
+    <Target Name="zControls_R:Clean">
+        <MSBuild Projects="zControls_R.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="zControls_R:Make">
+        <MSBuild Projects="zControls_R.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="zControls_D">
+        <MSBuild Projects="zControls_D.dproj"/>
+    </Target>
+    <Target Name="zControls_D:Clean">
+        <MSBuild Projects="zControls_D.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="zControls_D:Make">
+        <MSBuild Projects="zControls_D.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="zControls_R;zControls_D"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="zControls_R:Clean;zControls_D:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="zControls_R:Make;zControls_D:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
